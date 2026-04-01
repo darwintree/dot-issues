@@ -1,0 +1,157 @@
+import { afterEach, expect, test } from "bun:test";
+import {
+  createWorkspace,
+  destroyWorkspace,
+  parseJsonOutput,
+  readIssueDocuments,
+  runCli,
+  seedIssue,
+} from "./setup";
+
+const workspaces: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(workspaces.splice(0).map((workspace) => destroyWorkspace(workspace)));
+});
+
+async function makeWorkspace(): Promise<string> {
+  const workspace = await createWorkspace();
+  workspaces.push(workspace);
+  return workspace;
+}
+
+test("commands use a custom issue directory when --issue-dir is provided", async () => {
+  const workspace = await makeWorkspace();
+  const issueDir = "custom-issues";
+
+  const createResult = await runCli(workspace, [
+    "new",
+    "--title",
+    "Custom dir issue",
+    "--status",
+    "open",
+    "--issue-dir",
+    issueDir,
+  ]);
+
+  expect(createResult.exitCode).toBe(0);
+
+  const createPayload = parseJsonOutput<{
+    data: { issue: { id: string }; path: string };
+  }>(createResult.stdout);
+  expect(createPayload.data.path).toContain("/custom-issues/");
+
+  await seedIssue(
+    workspace,
+    {
+      id: "550e8400-e29b-41d4-a716-446655440003",
+      title: "Second custom issue",
+      status: "working",
+      priority: "medium",
+      labels: ["custom"],
+      created_at: "2026-04-01T15:00:00Z",
+      updated_at: "2026-04-01T15:00:00Z",
+    },
+    "",
+    issueDir,
+  );
+
+  const listResult = await runCli(workspace, ["list", "--issue-dir", issueDir]);
+  expect(listResult.exitCode).toBe(0);
+  expect(listResult.stdout).toBe(
+    "[working] Second custom issue (medium) #custom (2026-04-01)\n[open] Custom dir issue (2026-04-01)",
+  );
+
+  const modifyResult = await runCli(workspace, [
+    "modify-metadata",
+    "--id",
+    createPayload.data.issue.id,
+    "--status",
+    "closed",
+    "--labels",
+    "customized",
+    "--issue-dir",
+    issueDir,
+  ]);
+
+  expect(modifyResult.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace, issueDir);
+  expect(documents).toHaveLength(2);
+  const modifiedDocument = documents.find(
+    (document) => document.frontMatter.id === createPayload.data.issue.id,
+  );
+  expect(modifiedDocument?.name).toStartWith("closed_custom-dir-issue_");
+  expect(modifiedDocument?.frontMatter.labels).toEqual(["customized"]);
+});
+
+test("recursive scan finds nested issue files and modify preserves the subdir", async () => {
+  const workspace = await makeWorkspace();
+  const issueDir = "custom-issues";
+
+  await seedIssue(
+    workspace,
+    {
+      id: "550e8400-e29b-41d4-a716-446655440004",
+      title: "Nested issue",
+      status: "working",
+      priority: "high",
+      labels: ["nested"],
+      created_at: "2026-04-01T16:00:00Z",
+      updated_at: "2026-04-01T16:00:00Z",
+    },
+    "",
+    `${issueDir}/team/backend`,
+  );
+
+  const listResult = await runCli(workspace, ["list", "--issue-dir", issueDir]);
+  expect(listResult.exitCode).toBe(0);
+  expect(listResult.stdout).toBe("[working] Nested issue (high) #nested (2026-04-01)");
+
+  const modifyResult = await runCli(workspace, [
+    "modify-metadata",
+    "--id",
+    "550e8400-e29b-41d4-a716-446655440004",
+    "--status",
+    "closed",
+    "--issue-dir",
+    issueDir,
+  ]);
+  expect(modifyResult.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace, issueDir);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].relativePath).toBe(
+    "team/backend/closed_nested-issue_202604011600.md",
+  );
+});
+
+test("new stores issues in a nested subdir when --subdir is provided", async () => {
+  const workspace = await makeWorkspace();
+  const issueDir = "custom-issues";
+
+  const createResult = await runCli(workspace, [
+    "new",
+    "--title",
+    "Nested new issue",
+    "--status",
+    "open",
+    "--issue-dir",
+    issueDir,
+    "--subdir",
+    "triage/frontend",
+  ]);
+
+  expect(createResult.exitCode).toBe(0);
+
+  const createPayload = parseJsonOutput<{
+    data: { path: string };
+  }>(createResult.stdout);
+  expect(createPayload.data.path).toContain("/custom-issues/triage/frontend/");
+
+  const documents = await readIssueDocuments(workspace, issueDir);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].relativePath).toStartWith(
+    "triage/frontend/open_nested-new-issue_",
+  );
+});

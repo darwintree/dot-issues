@@ -1,0 +1,15 @@
+{
+  "name": "file-issues",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "new": "bun skills/scripts/index.ts new",
+    "list": "bun skills/scripts/index.ts list",
+    "modify": "bun skills/scripts/index.ts modify-metadata"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}
