@@ -1,6 +1,7 @@
 {
-  "name": "file-issues",
+  "name": "dot-issues",
   "version": "0.1.0",
+  "description": "Issues that live in your repo — plain Markdown, built for agents.",
   "private": true,
   "type": "module",
   "scripts": {

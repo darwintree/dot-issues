@@ -1,9 +1,9 @@
 ---
-name: file-issues
-description: Create, list, and update repo-local Markdown issue files with the bundled Bun CLI. Use for lightweight issue tracking without GitHub or Jira, including creating a local issue note, listing or filtering Markdown issues, updating issue metadata, or working with a custom `--issue-dir` and nested issue subdirectories.
+name: dot-issues
+description: Create, list, and update repo-local Markdown issue files with the bundled Bun CLI. Issues that live in your repo — plain Markdown, built for agents. Use for lightweight issue tracking without GitHub or Jira, including creating local issue notes, listing or filtering Markdown issues, updating issue metadata, or working with a custom `--issue-dir` and nested issue subdirectories.
 ---
 
-# file-issues
+# dot-issues
 
 Resolve `{skillPath}` as the directory that contains this `SKILL.md`.
 

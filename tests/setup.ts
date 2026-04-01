@@ -13,7 +13,7 @@ const REPO_ROOT = resolve(import.meta.dir, "..");
 const CLI_ENTRY = join(REPO_ROOT, "skills/scripts/index.ts");
 
 export async function createWorkspace(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "file-issues-"));
+  return mkdtemp(join(tmpdir(), "dot-issues-"));
 }
 
 export async function destroyWorkspace(workspace: string): Promise<void> {

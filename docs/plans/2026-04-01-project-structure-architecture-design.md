@@ -1,8 +1,9 @@
 # Project Structure & Architecture Design
 
 **Date:** 2026-04-01
-**Project:** file-issues → Claude Code Skill
+**Project:** dot-issues → Claude Code Skill
 **Status:** Design Approved
+**Slogan:** Issues that live in your repo — plain Markdown, built for agents.
 
 ---
 
@@ -19,7 +20,7 @@
 ## Directory Structure
 
 ```text
-file-issues/
+dot-issues/
 ├── src → skills/scripts          # Symlink (dev convenience only)
 ├── skills/
 │   ├── scripts/                  # Source code (distributable)
@@ -355,7 +356,7 @@ bun test tests/commands.test.ts
 When distributed as a Claude Code skill:
 
 ```text
-file-issues-skill/
+dot-issues-skill/
 ├── skills/scripts/              # Full source code visible
 ├── SKILL.md                      # Skill manifest
 ├── README.md                     # Usage documentation
