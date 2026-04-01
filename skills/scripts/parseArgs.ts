@@ -18,7 +18,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
 
     const value = tokens[index + 1];
     if (value === undefined || value.startsWith("--")) {
-      args[key] = undefined;
+      args[key] = true;
       index += 1;
       continue;
     }

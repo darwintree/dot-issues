@@ -15,16 +15,54 @@ import {
   validateTitle,
 } from "../utils/validate";
 
+export const DEFAULT_ISSUE_BODY = `<!--
+This body is user-owned. Adjust the sections freely to fit the issue.
+Use the CLI to update front matter fields such as title, status, priority, and labels.
+-->
+
+## Problem
+
+<!-- Describe the concrete problem, symptom, or requested change. -->
+
+## Issue Assessment
+
+<!-- Record whether this is a meaningful issue worth acting on. -->
+- Impact:
+- Evidence:
+- Scope:
+- Decision: valid / invalid / defer
+
+## Verification Checklist
+
+<!-- Keep this checklist practical. Add or remove items as needed for the issue. -->
+- [ ] Problem reproduced
+- [ ] Root cause identified
+- [ ] Fix implemented
+- [ ] Tests added or updated
+- [ ] Fix verified
+- [ ] No regression found
+
+## Progress Log
+
+<!-- Append dated updates here as work progresses. Keep older entries instead of rewriting them. -->
+- YYYY-MM-DD:
+`;
+
 export async function runNewCommand(
   args: ParsedArgMap,
   context: CommandContext,
 ): Promise<CommandResult<{ issue: Issue; path: string }>> {
   try {
+    const blankBody = args["blank-body"];
     const title = args.title;
     const status = args.status;
     const priority = args.priority;
     const subdir = args.subdir;
     const labels = args.labels ?? [];
+
+    if (blankBody !== undefined && blankBody !== true) {
+      return fail("Invalid --blank-body");
+    }
 
     if (typeof title !== "string" || !validateTitle(title)) {
       return fail("Missing or invalid --title");
@@ -72,7 +110,7 @@ export async function runNewCommand(
       return fail(`Issue file already exists: ${filePath}`);
     }
 
-    await writeMarkdownFile(filePath, issue, "");
+    await writeMarkdownFile(filePath, issue, blankBody ? "" : DEFAULT_ISSUE_BODY);
 
     return {
       success: true,

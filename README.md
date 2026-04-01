@@ -6,7 +6,7 @@
 
 - 不依赖 GitHub Issues
 - metadata 只存放在 front matter 中
-- issue 正文允许手动编辑
+- issue 正文允许手动编辑，默认会生成一个可自行调整的模板
 - 运行前可直接审计全部源码
 
 ## 目录
@@ -21,8 +21,10 @@
 
 ```bash
 bun skills/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
+bun skills/scripts/index.ts new --title "Scratch note" --status open --blank-body
 bun skills/scripts/index.ts list --status open
 bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
+bun skills/scripts/index.ts touch --id <uuid>
 ```
 
 如需指定 issue 基础目录，可以传 `--issue-dir`，默认值是 `.issues`：
@@ -31,6 +33,7 @@ bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --priori
 bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues
 bun skills/scripts/index.ts list --issue-dir custom-issues
 bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --issue-dir custom-issues
+bun skills/scripts/index.ts touch --id <uuid> --issue-dir custom-issues
 ```
 
 `list` 和 `modify-metadata` 会递归扫描 `--issue-dir` 下的所有子目录。`new` 如需写入某个子目录，可额外传 `--subdir`：
@@ -46,6 +49,7 @@ bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-di
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
 bun {skillPath}/scripts/index.ts list --status open
 bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
+bun {skillPath}/scripts/index.ts touch --id <uuid>
 bun {skillPath}/scripts/index.ts list --issue-dir custom-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues --subdir team/auth
 ```
@@ -66,6 +70,12 @@ updated_at: "2026-04-01T14:30:00Z"
 
 正文可手动编辑。
 ```
+
+新建 issue 时，正文默认会带上一个通用模板，包含 `Problem`、`Issue Assessment`、`Verification Checklist`、`Progress Log` 几个区块，并用 HTML 注释提示可以按需调整格式。
+
+如需跳过默认模板并创建空正文，可在 `new` 命令后追加 `--blank-body`。
+
+如需在手动编辑正文后仅刷新 `updated_at`，可使用 `touch --id <uuid>`。
 
 ## 测试
 

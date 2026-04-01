@@ -1,15 +1,10 @@
 import { rename } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { CommandContext, CommandResult, Issue, ParsedArgMap } from "../types";
-import {
-  fileExists,
-  listIssueFiles,
-  readMarkdownFile,
-  writeMarkdownFile,
-} from "../utils/file";
+import { fileExists, writeMarkdownFile } from "../utils/file";
+import { findIssueById } from "../utils/issue";
 import { generateFileName, toIsoMinuteString } from "../utils/markdown";
 import {
-  toIssue,
   validateLabels,
   validatePriority,
   validateStatus,
@@ -97,23 +92,6 @@ export async function runModifyCommand(
   } catch (error) {
     return fail("Failed to modify issue", error);
   }
-}
-
-async function findIssueById(
-  issueDir: string,
-  id: string,
-): Promise<{ filePath: string; issue: Issue; body: string } | null> {
-  const filePaths = await listIssueFiles(issueDir);
-
-  for (const filePath of filePaths) {
-    const { frontMatter, body } = await readMarkdownFile(filePath);
-    const issue = toIssue(frontMatter);
-    if (issue.id === id) {
-      return { filePath, issue, body };
-    }
-  }
-
-  return null;
 }
 
 function fail(message: string, error?: unknown): CommandResult {

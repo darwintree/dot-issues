@@ -4,16 +4,19 @@ import type { CommandContext, CommandResult } from "./types";
 import { runListCommand } from "./commands/list";
 import { runModifyCommand } from "./commands/modify";
 import { runNewCommand } from "./commands/new";
+import { runTouchCommand } from "./commands/touch";
 
 const USAGE = `Usage:
-  bun skills/scripts/index.ts new --title "Fix login bug" --status open [--priority high] [--labels bug] [--issue-dir .issues] [--subdir team/auth]
+  bun skills/scripts/index.ts new --title "Fix login bug" --status open [--priority high] [--labels bug] [--issue-dir .issues] [--subdir team/auth] [--blank-body]
   bun skills/scripts/index.ts list [--status open] [--priority high] [--issue-dir .issues]
-  bun skills/scripts/index.ts modify-metadata --id <uuid> [--title "..."] [--status closed] [--priority low] [--labels bug] [--issue-dir .issues]`;
+  bun skills/scripts/index.ts modify-metadata --id <uuid> [--title "..."] [--status closed] [--priority low] [--labels bug] [--issue-dir .issues]
+  bun skills/scripts/index.ts touch --id <uuid> [--issue-dir .issues]`;
 
 const COMMAND_HANDLERS = {
   new: runNewCommand,
   list: runListCommand,
   "modify-metadata": runModifyCommand,
+  touch: runTouchCommand,
 } as const;
 
 export async function main(

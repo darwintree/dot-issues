@@ -2,7 +2,7 @@ export type IssueStatus = "open" | "working" | "closed";
 export type IssuePriority = "low" | "medium" | "high";
 export type FrontMatterValue = string | string[];
 export type FrontMatterData = Record<string, FrontMatterValue | undefined>;
-export type ParsedArgValue = string | string[] | undefined;
+export type ParsedArgValue = string | string[] | boolean | undefined;
 export type ParsedArgMap = Record<string, ParsedArgValue>;
 
 export interface Issue {

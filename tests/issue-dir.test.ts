@@ -155,3 +155,41 @@ test("new stores issues in a nested subdir when --subdir is provided", async () 
     "triage/frontend/open_nested-new-issue_",
   );
 });
+
+test("touch finds nested issue files in a custom issue directory", async () => {
+  const workspace = await makeWorkspace();
+  const issueDir = "custom-issues";
+
+  await seedIssue(
+    workspace,
+    {
+      id: "550e8400-e29b-41d4-a716-446655440006",
+      title: "Nested touch issue",
+      status: "working",
+      priority: "high",
+      labels: ["nested", "touch"],
+      created_at: "2026-03-28T09:00:00Z",
+      updated_at: "2026-03-28T09:00:00Z",
+    },
+    "Keep nested body.\n",
+    `${issueDir}/team/backend`,
+  );
+
+  const result = await runCli(workspace, [
+    "touch",
+    "--id",
+    "550e8400-e29b-41d4-a716-446655440006",
+    "--issue-dir",
+    issueDir,
+  ]);
+
+  expect(result.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace, issueDir);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].relativePath).toBe(
+    "team/backend/working_nested-touch-issue_202603280900.md",
+  );
+  expect(documents[0].frontMatter.updated_at).not.toBe("2026-03-28T09:00:00Z");
+  expect(documents[0].body).toBe("Keep nested body.\n");
+});
