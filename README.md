@@ -20,6 +20,12 @@ A zero-dependency Bun CLI that maintains local issue lists as Markdown files wit
 - `.issues/` – Default issue Markdown directory
 - `tests/` – Critical path tests
 
+## Install as a Skill
+
+```bash
+npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
+```
+
 ## Quick Start
 
 ### Create an issue
@@ -60,7 +66,7 @@ bun skills/scripts/index.ts new --title "Fix bug" --status open --issue-dir cust
 
 ## Distributing as a Skill
 
-When using as a Claude Code skill, resolve `{skillPath}` as the directory containing `SKILL.md`:
+After installation, when using as a skill, resolve `{skillPath}` as the directory containing `SKILL.md`:
 
 ```bash
 {skillPath} = /path/to/dot-issues/skills
@@ -118,7 +124,7 @@ bun test
 - **File-centric** – One issue = one Markdown file
 - **Metadata isolation** – CLI manages YAML front matter, users edit body
 - **Transparent** – All source code <600 lines, fully auditable
-- **Skill-native** – Compatible with Claude Code skill distribution
+- **Skill-native** – Compatible with skill distribution
 
 ## Documentation
 

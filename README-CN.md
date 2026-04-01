@@ -20,6 +20,12 @@
 - `.issues/`：issue Markdown 文件目录
 - `tests/`：关键路径测试
 
+## 安装为 skill
+
+```bash
+npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
+```
+
 ## 使用方式
 
 仓库开发态可以直接从仓库根目录运行：
@@ -47,7 +53,7 @@ bun skills/scripts/index.ts touch --id <uuid> --issue-dir custom-issues
 bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues --subdir team/auth
 ```
 
-作为 skill 分发或单独使用时，先确定 `{skillPath}`。它就是包含 `SKILL.md` 的目录，然后显式传入脚本路径：
+安装后，作为 skill 分发或单独使用时，先确定 `{skillPath}`。它就是包含 `SKILL.md` 的目录，然后显式传入脚本路径：
 
 ```bash
 {skillPath} = /path/to/dot-issues/skills
