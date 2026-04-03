@@ -37,7 +37,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
   expect(createResult.exitCode).toBe(0);
 
   const createPayload = parseJsonOutput<{
-    data: { issue: { id: string }; path: string };
+    data: { issue: { id: string; created_at: string }; path: string };
   }>(createResult.stdout);
   expect(createPayload.data.path).toContain("/custom-issues/");
 
@@ -59,7 +59,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
   const listResult = await runCli(workspace, ["list", "--issue-dir", issueDir]);
   expect(listResult.exitCode).toBe(0);
   expect(listResult.stdout).toBe(
-    "[working] Second custom issue (medium) #custom (2026-04-01)\n[open] Custom dir issue (2026-04-01)",
+    `[open] Custom dir issue (${createPayload.data.issue.created_at.slice(0, 10)})\n[working] Second custom issue (medium) #custom (2026-04-01)`,
   );
 
   const modifyResult = await runCli(workspace, [
