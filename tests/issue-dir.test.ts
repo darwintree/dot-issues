@@ -5,6 +5,7 @@ import {
   parseJsonOutput,
   readIssueDocuments,
   runCli,
+  seedLabelRegistry,
   seedIssue,
 } from "./setup";
 
@@ -37,7 +38,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
   expect(createResult.exitCode).toBe(0);
 
   const createPayload = parseJsonOutput<{
-    data: { issue: { id: string }; path: string };
+    data: { issue: { id: string; created_at: string }; path: string };
   }>(createResult.stdout);
   expect(createPayload.data.path).toContain("/custom-issues/");
 
@@ -48,7 +49,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
       title: "Second custom issue",
       status: "working",
       priority: "medium",
-      labels: ["custom"],
+      labels: ["CUSTOM"],
       created_at: "2026-04-01T15:00:00Z",
       updated_at: "2026-04-01T15:00:00Z",
     },
@@ -59,7 +60,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
   const listResult = await runCli(workspace, ["list", "--issue-dir", issueDir]);
   expect(listResult.exitCode).toBe(0);
   expect(listResult.stdout).toBe(
-    "[working] Second custom issue (medium) #custom (2026-04-01)\n[open] Custom dir issue (2026-04-01)",
+    `[open] Custom dir issue (${createPayload.data.issue.created_at.slice(0, 10)})\n[working] Second custom issue (medium) #CUSTOM (2026-04-01)`,
   );
 
   const modifyResult = await runCli(workspace, [
@@ -70,6 +71,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
     "closed",
     "--labels",
     "customized",
+    "--allow-new-label",
     "--issue-dir",
     issueDir,
   ]);
@@ -82,7 +84,15 @@ test("commands use a custom issue directory when --issue-dir is provided", async
     (document) => document.frontMatter.id === createPayload.data.issue.id,
   );
   expect(modifiedDocument?.name).toStartWith("closed_custom-dir-issue_");
-  expect(modifiedDocument?.frontMatter.labels).toEqual(["customized"]);
+  expect(modifiedDocument?.frontMatter.labels).toEqual(["CUSTOMIZED"]);
+});
+
+test("list rejects unexpected positional arguments", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, ["list", "unexpected"]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("Unexpected argument: unexpected");
 });
 
 test("recursive scan finds nested issue files and modify preserves the subdir", async () => {
@@ -96,7 +106,7 @@ test("recursive scan finds nested issue files and modify preserves the subdir", 
       title: "Nested issue",
       status: "working",
       priority: "high",
-      labels: ["nested"],
+      labels: ["NESTED"],
       created_at: "2026-04-01T16:00:00Z",
       updated_at: "2026-04-01T16:00:00Z",
     },
@@ -106,7 +116,7 @@ test("recursive scan finds nested issue files and modify preserves the subdir", 
 
   const listResult = await runCli(workspace, ["list", "--issue-dir", issueDir]);
   expect(listResult.exitCode).toBe(0);
-  expect(listResult.stdout).toBe("[working] Nested issue (high) #nested (2026-04-01)");
+  expect(listResult.stdout).toBe("[working] Nested issue (high) #NESTED (2026-04-01)");
 
   const modifyResult = await runCli(workspace, [
     "modify-metadata",
@@ -167,7 +177,7 @@ test("touch finds nested issue files in a custom issue directory", async () => {
       title: "Nested touch issue",
       status: "working",
       priority: "high",
-      labels: ["nested", "touch"],
+      labels: ["NESTED", "TOUCH"],
       created_at: "2026-03-28T09:00:00Z",
       updated_at: "2026-03-28T09:00:00Z",
     },
@@ -192,4 +202,70 @@ test("touch finds nested issue files in a custom issue directory", async () => {
   );
   expect(documents[0].frontMatter.updated_at).not.toBe("2026-03-28T09:00:00Z");
   expect(documents[0].body).toBe("Keep nested body.\n");
+});
+
+test("archive preserves nested subdirs in a custom issue directory", async () => {
+  const workspace = await makeWorkspace();
+  const issueDir = "custom-issues";
+
+  await seedIssue(
+    workspace,
+    {
+      id: "550e8400-e29b-41d4-a716-446655440107",
+      title: "Nested archive issue",
+      status: "working",
+      priority: "high",
+      labels: ["NESTED", "ARCHIVE"],
+      created_at: "2026-03-28T09:00:00Z",
+      updated_at: "2026-03-28T09:00:00Z",
+    },
+    "Archive nested body.\n",
+    `${issueDir}/team/backend`,
+  );
+
+  const archiveResult = await runCli(workspace, [
+    "archive",
+    "--id",
+    "550e8400-e29b-41d4-a716-446655440107",
+    "--issue-dir",
+    issueDir,
+  ]);
+
+  expect(archiveResult.exitCode).toBe(0);
+
+  const listResult = await runCli(workspace, ["list", "--issue-dir", issueDir]);
+  expect(listResult.exitCode).toBe(0);
+  expect(listResult.stdout).toBe("");
+
+  const showResult = await runCli(workspace, [
+    "show",
+    "--id",
+    "550e8400-e29b-41d4-a716-446655440107",
+    "--issue-dir",
+    issueDir,
+  ]);
+  expect(showResult.exitCode).toBe(0);
+
+  const showPayload = parseJsonOutput<{
+    data: {
+      issue: {
+        status: string;
+        relativePath: string;
+        archived: boolean;
+      };
+    };
+  }>(showResult.stdout);
+
+  expect(showPayload.data.issue.status).toBe("closed");
+  expect(showPayload.data.issue.relativePath).toBe(
+    "archive/team/backend/closed_nested-archive-issue_202603280900.md",
+  );
+  expect(showPayload.data.issue.archived).toBe(true);
+
+  const documents = await readIssueDocuments(workspace, issueDir);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].relativePath).toBe(
+    "archive/team/backend/closed_nested-archive-issue_202603280900.md",
+  );
+  expect(documents[0].body).toBe("Archive nested body.\n");
 });

@@ -1,8 +1,20 @@
 import type { ParsedArgMap, ParsedArgs } from "./types";
 
+const COMMANDS_WITH_SUBCOMMANDS = new Set(["labels"]);
+
 export function parseArgs(argv: string[]): ParsedArgs {
-  const [command = "", ...tokens] = argv;
+  const [command = "", ...rawTokens] = argv;
+  const tokens = [...rawTokens];
   const args: ParsedArgMap = {};
+  let subcommand: string | undefined;
+
+  if (
+    COMMANDS_WITH_SUBCOMMANDS.has(command) &&
+    tokens[0] &&
+    !tokens[0].startsWith("--")
+  ) {
+    subcommand = tokens.shift();
+  }
 
   for (let index = 0; index < tokens.length; ) {
     const token = tokens[index];
@@ -33,5 +45,5 @@ export function parseArgs(argv: string[]): ParsedArgs {
     index += 2;
   }
 
-  return { command, args };
+  return { command, subcommand, args };
 }

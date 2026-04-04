@@ -1,0 +1,1 @@
+../../skills/reference/show.md

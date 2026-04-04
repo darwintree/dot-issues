@@ -2,9 +2,16 @@ import { rename } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { CommandContext, CommandResult, Issue, ParsedArgMap } from "../types";
 import { fileExists, writeMarkdownFile } from "../utils/file";
-import { findIssueById } from "../utils/issue";
+import {
+  assertLabelsRegistered,
+  buildUpdatedRegistryLabels,
+  readLabelRegistry,
+  writeLabelRegistry,
+} from "../utils/labels";
+import { findIssueById, mergeIssueFrontMatter } from "../utils/issue";
 import { generateFileName, toIsoMinuteString } from "../utils/markdown";
 import {
+  normalizeLabels,
   validateLabels,
   validatePriority,
   validateStatus,
@@ -22,6 +29,7 @@ export async function runModifyCommand(
     const status = args.status;
     const priority = args.priority;
     const labels = args.labels;
+    const allowNewLabel = args["allow-new-label"];
 
     if (typeof id !== "string" || !validateUUID(id)) {
       return fail("Missing or invalid --id");
@@ -46,6 +54,10 @@ export async function runModifyCommand(
       return fail("Invalid --labels");
     }
 
+    if (allowNewLabel !== undefined && allowNewLabel !== true) {
+      return fail("Invalid --allow-new-label");
+    }
+
     if (
       title === undefined &&
       status === undefined &&
@@ -60,12 +72,27 @@ export async function runModifyCommand(
       return fail(`Issue not found: ${id}`);
     }
 
+    const normalizedLabels = labels === undefined ? undefined : normalizeLabels(labels);
+    const nextRegistryLabels =
+      normalizedLabels && allowNewLabel
+        ? buildUpdatedRegistryLabels(
+            await readLabelRegistry(context.issueDir),
+            normalizedLabels,
+          )
+        : undefined;
+
+    if (normalizedLabels) {
+      if (!allowNewLabel) {
+        await assertLabelsRegistered(context.issueDir, normalizedLabels);
+      }
+    }
+
     const issue: Issue = {
       ...foundIssue.issue,
       title: typeof title === "string" ? title.trim() : foundIssue.issue.title,
       status: typeof status === "string" ? status : foundIssue.issue.status,
       priority: typeof priority === "string" ? priority : foundIssue.issue.priority,
-      labels: labels ?? foundIssue.issue.labels,
+      labels: normalizedLabels ?? foundIssue.issue.labels,
       updated_at: toIsoMinuteString(new Date()),
     };
 
@@ -78,11 +105,28 @@ export async function runModifyCommand(
       return fail(`Issue file already exists: ${nextPath}`);
     }
 
-    if (nextPath !== foundIssue.filePath) {
-      await rename(foundIssue.filePath, nextPath);
-    }
+    try {
+      if (nextPath !== foundIssue.filePath) {
+        await rename(foundIssue.filePath, nextPath);
+      }
 
-    await writeMarkdownFile(nextPath, issue, foundIssue.body);
+      await writeMarkdownFile(
+        nextPath,
+        mergeIssueFrontMatter(foundIssue.frontMatter, issue),
+        foundIssue.body,
+      );
+
+      if (nextRegistryLabels) {
+        await writeLabelRegistry(context.issueDir, nextRegistryLabels);
+      }
+    } catch (error) {
+      if (nextPath !== foundIssue.filePath && (await fileExists(nextPath))) {
+        await rename(nextPath, foundIssue.filePath);
+      }
+
+      await writeMarkdownFile(foundIssue.filePath, foundIssue.frontMatter, foundIssue.body);
+      throw error;
+    }
 
     return {
       success: true,

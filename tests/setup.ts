@@ -2,7 +2,9 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import type { Issue } from "../skills/scripts/types";
+import { writeLabelRegistry } from "../skills/scripts/utils/labels";
 import { listIssueFiles } from "../skills/scripts/utils/file";
+import { issueToFrontMatter } from "../skills/scripts/utils/issue";
 import {
   generateFileName,
   generateMarkdownContent,
@@ -85,8 +87,17 @@ export async function seedIssue(
   );
 
   await mkdir(resolvedIssueDir, { recursive: true });
-  await writeFile(filePath, generateMarkdownContent(issue, body), "utf8");
+  await writeFile(filePath, generateMarkdownContent(issueToFrontMatter(issue), body), "utf8");
   return filePath;
+}
+
+export async function seedLabelRegistry(
+  cwd: string,
+  labels: string[],
+  issueDir = ".issues",
+): Promise<string[]> {
+  const resolvedIssueDir = resolveIssueDir(cwd, issueDir);
+  return writeLabelRegistry(resolvedIssueDir, labels);
 }
 
 export function parseJsonOutput<T>(output: string): T {

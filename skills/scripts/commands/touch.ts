@@ -1,6 +1,6 @@
 import type { CommandContext, CommandResult, Issue, ParsedArgMap } from "../types";
 import { writeMarkdownFile } from "../utils/file";
-import { findIssueById } from "../utils/issue";
+import { findIssueById, mergeIssueFrontMatter } from "../utils/issue";
 import { toIsoMinuteString } from "../utils/markdown";
 import { validateUUID } from "../utils/validate";
 
@@ -25,7 +25,11 @@ export async function runTouchCommand(
       updated_at: toIsoMinuteString(new Date()),
     };
 
-    await writeMarkdownFile(foundIssue.filePath, issue, foundIssue.body);
+    await writeMarkdownFile(
+      foundIssue.filePath,
+      mergeIssueFrontMatter(foundIssue.frontMatter, issue),
+      foundIssue.body,
+    );
 
     return {
       success: true,

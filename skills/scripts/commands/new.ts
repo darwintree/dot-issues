@@ -1,3 +1,4 @@
+import { unlink } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import type { CommandContext, CommandResult, Issue, ParsedArgMap } from "../types";
@@ -7,8 +8,16 @@ import {
   resolveIssueSubdir,
   writeMarkdownFile,
 } from "../utils/file";
+import { issueToFrontMatter } from "../utils/issue";
+import {
+  assertLabelsRegistered,
+  buildUpdatedRegistryLabels,
+  readLabelRegistry,
+  writeLabelRegistry,
+} from "../utils/labels";
 import { generateFileName, toIsoMinuteString } from "../utils/markdown";
 import {
+  normalizeLabels,
   validateLabels,
   validatePriority,
   validateStatus,
@@ -59,9 +68,14 @@ export async function runNewCommand(
     const priority = args.priority;
     const subdir = args.subdir;
     const labels = args.labels ?? [];
+    const allowNewLabel = args["allow-new-label"];
 
     if (blankBody !== undefined && blankBody !== true) {
       return fail("Invalid --blank-body");
+    }
+
+    if (allowNewLabel !== undefined && allowNewLabel !== true) {
+      return fail("Invalid --allow-new-label");
     }
 
     if (typeof title !== "string" || !validateTitle(title)) {
@@ -89,6 +103,17 @@ export async function runNewCommand(
 
     const issueDir = resolveIssueSubdir(context.issueDir, subdir);
     await ensureIssuesDir(issueDir);
+    const normalizedLabels = normalizeLabels(labels);
+    const nextRegistryLabels = allowNewLabel
+      ? buildUpdatedRegistryLabels(
+          await readLabelRegistry(context.issueDir),
+          normalizedLabels,
+        )
+      : undefined;
+
+    if (!allowNewLabel) {
+      await assertLabelsRegistered(context.issueDir, normalizedLabels);
+    }
 
     const createdAt = toIsoMinuteString(new Date());
     const issue: Issue = {
@@ -96,7 +121,7 @@ export async function runNewCommand(
       title: title.trim(),
       status,
       priority: typeof priority === "string" ? priority : undefined,
-      labels,
+      labels: normalizedLabels,
       created_at: createdAt,
       updated_at: createdAt,
     };
@@ -110,7 +135,20 @@ export async function runNewCommand(
       return fail(`Issue file already exists: ${filePath}`);
     }
 
-    await writeMarkdownFile(filePath, issue, blankBody ? "" : DEFAULT_ISSUE_BODY);
+    await writeMarkdownFile(
+      filePath,
+      issueToFrontMatter(issue),
+      blankBody ? "" : DEFAULT_ISSUE_BODY,
+    );
+
+    try {
+      if (nextRegistryLabels) {
+        await writeLabelRegistry(context.issueDir, nextRegistryLabels);
+      }
+    } catch (error) {
+      await unlink(filePath);
+      throw error;
+    }
 
     return {
       success: true,
