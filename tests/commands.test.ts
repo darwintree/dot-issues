@@ -170,6 +170,22 @@ test("list command returns empty output for an empty workspace", async () => {
   expect(result.stderr).toBe("");
 });
 
+test("list command rejects unexpected positional arguments", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, ["list", "unexpected"]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("Unexpected argument: unexpected");
+});
+
+test("labels command rejects unexpected positional arguments after the subcommand", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, ["labels", "sync", "unexpected"]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("Unexpected argument: unexpected");
+});
+
 test("list command sorts issues and applies status and priority filters", async () => {
   const workspace = await makeWorkspace();
 
