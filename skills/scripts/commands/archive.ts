@@ -2,7 +2,11 @@ import { mkdir, rename } from "node:fs/promises";
 import { join } from "node:path";
 import type { CommandContext, CommandResult, Issue, ParsedArgMap } from "../types";
 import { fileExists, writeMarkdownFile } from "../utils/file";
-import { findIssueById, getArchiveRelativeDir } from "../utils/issue";
+import {
+  findIssueById,
+  getArchiveRelativeDir,
+  mergeIssueFrontMatter,
+} from "../utils/issue";
 import { generateFileName, toIsoMinuteString } from "../utils/markdown";
 import { validateUUID } from "../utils/validate";
 
@@ -47,7 +51,11 @@ export async function runArchiveCommand(
 
     await mkdir(targetDir, { recursive: true });
     await rename(foundIssue.filePath, nextPath);
-    await writeMarkdownFile(nextPath, issue, foundIssue.body);
+    await writeMarkdownFile(
+      nextPath,
+      mergeIssueFrontMatter(foundIssue.frontMatter, issue),
+      foundIssue.body,
+    );
 
     return {
       success: true,

@@ -22,6 +22,27 @@ export function validateTitle(title: string): boolean {
   return title.trim().length > 0;
 }
 
+export function normalizeLabel(label: string): string {
+  return label.trim().toUpperCase();
+}
+
+export function normalizeLabels(labels: string[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const label of labels) {
+    const nextLabel = normalizeLabel(label);
+    if (!nextLabel || seen.has(nextLabel)) {
+      continue;
+    }
+
+    seen.add(nextLabel);
+    normalized.push(nextLabel);
+  }
+
+  return normalized;
+}
+
 export function validateLabels(value: unknown): value is string[] {
   return (
     Array.isArray(value) &&
@@ -69,7 +90,7 @@ export function toIssue(frontMatter: FrontMatterData): Issue {
     title,
     status,
     priority,
-    labels,
+    labels: normalizeLabels(labels),
     created_at,
     updated_at,
   };

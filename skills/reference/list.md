@@ -14,6 +14,7 @@ Notes:
 - Recursively scans `--issue-dir`
 - `--labels a --labels b` uses match-any semantics
 - Archived issues are excluded by default
+- Label filters are case-insensitive, but matching is done against normalized uppercase labels
 
 Examples:
 

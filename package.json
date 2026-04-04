@@ -6,11 +6,13 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "new": "bun skills/scripts/index.ts new",
     "list": "bun skills/scripts/index.ts list",
     "modify": "bun skills/scripts/index.ts modify-metadata"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^6.0.2"
   }
 }

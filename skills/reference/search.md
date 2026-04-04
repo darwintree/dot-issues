@@ -18,6 +18,7 @@ Notes:
 - Search is case-insensitive
 - Searches both titles and bodies
 - Archived issues are excluded by default
+- Label filters are case-insensitive, but matching is done against normalized uppercase labels
 
 Examples:
 

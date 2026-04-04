@@ -1,6 +1,7 @@
 import type { CommandContext, CommandResult, ParsedArgMap } from "../types";
 import { formatIssueLine, listLocatedIssues } from "../utils/issue";
 import {
+  normalizeLabels,
   validateLabels,
   validatePriority,
   validateStatus,
@@ -30,6 +31,7 @@ export async function runListCommand(
       return fail("Invalid --labels");
     }
 
+    const normalizedLabels = labels === undefined ? undefined : normalizeLabels(labels);
     const issues = (await listLocatedIssues(context.issueDir, { includeArchived: false })).map(
       (locatedIssue) => locatedIssue.issue,
     );
@@ -37,7 +39,11 @@ export async function runListCommand(
     const filteredIssues = issues
       .filter((issue) => !status || issue.status === status)
       .filter((issue) => !priority || issue.priority === priority)
-      .filter((issue) => !labels || labels.some((label) => issue.labels.includes(label)))
+      .filter(
+        (issue) =>
+          !normalizedLabels ||
+          normalizedLabels.some((label) => issue.labels.includes(label)),
+      )
       .sort((left, right) => {
         return (
           new Date(right.created_at).getTime() - new Date(left.created_at).getTime()

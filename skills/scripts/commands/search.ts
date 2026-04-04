@@ -1,6 +1,7 @@
 import type { CommandContext, CommandResult, ParsedArgMap } from "../types";
 import { formatIssueLine, listLocatedIssues } from "../utils/issue";
 import {
+  normalizeLabels,
   validateLabels,
   validatePriority,
   validateStatus,
@@ -36,6 +37,7 @@ export async function runSearchCommand(
     }
 
     const normalizedQuery = query.trim().toLowerCase();
+    const normalizedLabels = labels === undefined ? undefined : normalizeLabels(labels);
     const matchedIssues = (await listLocatedIssues(context.issueDir, { includeArchived: false }))
       .filter((locatedIssue) => {
         const searchableText =
@@ -46,7 +48,8 @@ export async function runSearchCommand(
       .filter((locatedIssue) => !priority || locatedIssue.issue.priority === priority)
       .filter(
         (locatedIssue) =>
-          !labels || labels.some((label) => locatedIssue.issue.labels.includes(label)),
+          !normalizedLabels ||
+          normalizedLabels.some((label) => locatedIssue.issue.labels.includes(label)),
       )
       .sort((left, right) => {
         return (

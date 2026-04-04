@@ -1,5 +1,5 @@
 import { dirname, relative } from "node:path";
-import type { Issue } from "../types";
+import type { FrontMatterData, Issue } from "../types";
 import { ARCHIVE_DIRNAME, listIssueFiles, readMarkdownFile } from "./file";
 import { toIssue } from "./validate";
 
@@ -7,6 +7,7 @@ export interface LocatedIssue {
   filePath: string;
   relativePath: string;
   archived: boolean;
+  frontMatter: FrontMatterData;
   issue: Issue;
   body: string;
 }
@@ -32,6 +33,7 @@ export async function listLocatedIssues(
         filePath,
         relativePath,
         archived: isArchivedRelativePath(relativePath),
+        frontMatter,
         issue,
         body,
       };
@@ -77,4 +79,32 @@ export function getArchiveRelativeDir(relativePath: string): string {
   }
 
   return `${ARCHIVE_DIRNAME}/${parentDir}`;
+}
+
+export function mergeIssueFrontMatter(
+  frontMatter: FrontMatterData,
+  issue: Issue,
+): FrontMatterData {
+  return {
+    ...frontMatter,
+    id: issue.id,
+    title: issue.title,
+    status: issue.status,
+    priority: issue.priority,
+    labels: issue.labels,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
+}
+
+export function issueToFrontMatter(issue: Issue): FrontMatterData {
+  return {
+    id: issue.id,
+    title: issue.title,
+    status: issue.status,
+    priority: issue.priority,
+    labels: issue.labels,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
 }

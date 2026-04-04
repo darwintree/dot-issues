@@ -1,12 +1,14 @@
 import { afterEach, expect, test } from "bun:test";
 import { DEFAULT_ISSUE_BODY } from "../skills/scripts/commands/new";
 import type { Issue } from "../skills/scripts/types";
+import { toIsoMinuteString } from "../skills/scripts/utils/markdown";
 import {
   createWorkspace,
   destroyWorkspace,
   parseJsonOutput,
   readIssueDocuments,
   runCli,
+  seedLabelRegistry,
   seedIssue,
 } from "./setup";
 
@@ -24,6 +26,7 @@ async function makeWorkspace(): Promise<string> {
 
 test("new command creates an issue file with generated metadata", async () => {
   const workspace = await makeWorkspace();
+  await seedLabelRegistry(workspace, ["AUTH", "BUG"]);
   const result = await runCli(workspace, [
     "new",
     "--title",
@@ -50,7 +53,7 @@ test("new command creates an issue file with generated metadata", async () => {
   expect(documents[0].frontMatter.title).toBe("Fix login bug");
   expect(documents[0].frontMatter.status).toBe("open");
   expect(documents[0].frontMatter.priority).toBe("high");
-  expect(documents[0].frontMatter.labels).toEqual(["auth", "bug"]);
+  expect(documents[0].frontMatter.labels).toEqual(["AUTH", "BUG"]);
   expect(documents[0].body).toBe(DEFAULT_ISSUE_BODY);
 });
 
@@ -74,6 +77,90 @@ test("new command writes an empty body when --blank-body is provided", async () 
   expect(documents[0].body).toBe("");
 });
 
+test("new command rejects unregistered labels unless --allow-new-label is provided", async () => {
+  const workspace = await makeWorkspace();
+
+  const rejected = await runCli(workspace, [
+    "new",
+    "--title",
+    "Needs registry",
+    "--status",
+    "open",
+    "--labels",
+    "auth",
+  ]);
+
+  expect(rejected.exitCode).toBe(1);
+  expect(rejected.stderr).toContain("Label is not registered: AUTH");
+
+  const accepted = await runCli(workspace, [
+    "new",
+    "--title",
+    "Needs registry",
+    "--status",
+    "open",
+    "--labels",
+    "auth",
+    "--allow-new-label",
+  ]);
+
+  expect(accepted.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].frontMatter.labels).toEqual(["AUTH"]);
+});
+
+test("new command rejects unexpected positional arguments", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, [
+    "new",
+    "unexpected",
+    "--title",
+    "Bad args",
+    "--status",
+    "open",
+  ]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("Unexpected argument: unexpected");
+});
+
+test("new command does not persist registry updates when creation fails", async () => {
+  const workspace = await makeWorkspace();
+  const now = new Date();
+  const createdAtValues = [
+    toIsoMinuteString(now),
+    toIsoMinuteString(new Date(now.getTime() + 60_000)),
+  ];
+
+  for (const created_at of createdAtValues) {
+    await seedIssue(workspace, {
+      id: crypto.randomUUID(),
+      title: "Collision demo",
+      status: "open",
+      labels: ["AUTH"],
+      created_at,
+      updated_at: created_at,
+    });
+  }
+
+  const result = await runCli(workspace, [
+    "new",
+    "--title",
+    "Collision demo",
+    "--status",
+    "open",
+    "--labels",
+    "bug",
+    "--allow-new-label",
+  ]);
+
+  expect(result.exitCode).toBe(1);
+  const labelsResult = await runCli(workspace, ["labels"]);
+  expect(labelsResult.stdout).toBe("");
+});
+
 test("list command returns empty output for an empty workspace", async () => {
   const workspace = await makeWorkspace();
   const result = await runCli(workspace, ["list"]);
@@ -91,7 +178,7 @@ test("list command sorts issues and applies status and priority filters", async 
     title: "Older issue",
     status: "open",
     priority: "low",
-    labels: ["docs"],
+    labels: ["DOCS"],
     created_at: "2026-03-28T09:00:00Z",
     updated_at: "2026-03-28T09:00:00Z",
   });
@@ -101,7 +188,7 @@ test("list command sorts issues and applies status and priority filters", async 
     title: "Newer issue",
     status: "working",
     priority: "high",
-    labels: ["auth", "bug"],
+    labels: ["AUTH", "BUG"],
     created_at: "2026-04-01T14:30:00Z",
     updated_at: "2026-04-01T14:30:00Z",
   });
@@ -109,16 +196,16 @@ test("list command sorts issues and applies status and priority filters", async 
   const listResult = await runCli(workspace, ["list"]);
   expect(listResult.exitCode).toBe(0);
   expect(listResult.stdout).toBe(
-    "[working] Newer issue (high) #auth #bug (2026-04-01)\n[open] Older issue (low) #docs (2026-03-28)",
+    "[working] Newer issue (high) #AUTH #BUG (2026-04-01)\n[open] Older issue (low) #DOCS (2026-03-28)",
   );
 
   const statusResult = await runCli(workspace, ["list", "--status", "working"]);
   expect(statusResult.stdout).toBe(
-    "[working] Newer issue (high) #auth #bug (2026-04-01)",
+    "[working] Newer issue (high) #AUTH #BUG (2026-04-01)",
   );
 
   const priorityResult = await runCli(workspace, ["list", "--priority", "low"]);
-  expect(priorityResult.stdout).toBe("[open] Older issue (low) #docs (2026-03-28)");
+  expect(priorityResult.stdout).toBe("[open] Older issue (low) #DOCS (2026-03-28)");
 });
 
 test("list command filters by labels using match-any semantics", async () => {
@@ -129,7 +216,7 @@ test("list command filters by labels using match-any semantics", async () => {
     title: "Auth bug",
     status: "open",
     priority: "high",
-    labels: ["auth", "bug"],
+    labels: ["AUTH", "BUG"],
     created_at: "2026-04-01T09:00:00Z",
     updated_at: "2026-04-01T09:00:00Z",
   });
@@ -139,7 +226,7 @@ test("list command filters by labels using match-any semantics", async () => {
     title: "Docs refresh",
     status: "working",
     priority: "low",
-    labels: ["docs"],
+    labels: ["DOCS"],
     created_at: "2026-04-02T09:00:00Z",
     updated_at: "2026-04-02T09:00:00Z",
   });
@@ -148,7 +235,7 @@ test("list command filters by labels using match-any semantics", async () => {
     id: "550e8400-e29b-41d4-a716-446655440102",
     title: "Infra cleanup",
     status: "open",
-    labels: ["infra"],
+    labels: ["INFRA"],
     created_at: "2026-04-03T09:00:00Z",
     updated_at: "2026-04-03T09:00:00Z",
   });
@@ -163,7 +250,7 @@ test("list command filters by labels using match-any semantics", async () => {
 
   expect(result.exitCode).toBe(0);
   expect(result.stdout).toBe(
-    "[working] Docs refresh (low) #docs (2026-04-02)\n[open] Auth bug (high) #auth #bug (2026-04-01)",
+    "[working] Docs refresh (low) #DOCS (2026-04-02)\n[open] Auth bug (high) #AUTH #BUG (2026-04-01)",
   );
 });
 
@@ -174,7 +261,7 @@ test("show command returns issue metadata, body, path, and archived state", asyn
     title: "Show me",
     status: "open",
     priority: "medium",
-    labels: ["demo"],
+    labels: ["DEMO"],
     created_at: "2026-04-01T10:00:00Z",
     updated_at: "2026-04-01T10:00:00Z",
   };
@@ -215,7 +302,7 @@ test("search command matches title and body, case-insensitively", async () => {
       title: "Login investigation",
       status: "working",
       priority: "high",
-      labels: ["auth"],
+      labels: ["AUTH"],
       created_at: "2026-04-02T10:00:00Z",
       updated_at: "2026-04-02T10:00:00Z",
     },
@@ -228,7 +315,7 @@ test("search command matches title and body, case-insensitively", async () => {
       id: "550e8400-e29b-41d4-a716-446655440105",
       title: "Dashboard copy",
       status: "open",
-      labels: ["ui"],
+      labels: ["UI"],
       created_at: "2026-04-01T10:00:00Z",
       updated_at: "2026-04-01T10:00:00Z",
     },
@@ -239,18 +326,19 @@ test("search command matches title and body, case-insensitively", async () => {
   expect(result.exitCode).toBe(0);
   expect(result.stderr).toBe("");
   expect(result.stdout).toBe(
-    "[working] Login investigation (high) #auth (2026-04-02) :: working_login-investigation_202604021000.md\n[open] Dashboard copy #ui (2026-04-01) :: open_dashboard-copy_202604011000.md",
+    "[working] Login investigation (high) #AUTH (2026-04-02) :: working_login-investigation_202604021000.md\n[open] Dashboard copy #UI (2026-04-01) :: open_dashboard-copy_202604011000.md",
   );
 });
 
 test("modify-metadata updates front matter, preserves body, and renames the file", async () => {
   const workspace = await makeWorkspace();
+  await seedLabelRegistry(workspace, ["AUTH", "BUG", "CONFIRMED"]);
   const issue: Issue = {
     id: "550e8400-e29b-41d4-a716-446655440002",
     title: "Fix login bug",
     status: "open",
     priority: "high",
-    labels: ["auth"],
+    labels: ["AUTH"],
     created_at: "2026-04-01T14:30:00Z",
     updated_at: "2026-04-01T14:30:00Z",
   };
@@ -285,9 +373,107 @@ test("modify-metadata updates front matter, preserves body, and renames the file
   expect(documents[0].frontMatter.title).toBe("Fix login bug now");
   expect(documents[0].frontMatter.status).toBe("closed");
   expect(documents[0].frontMatter.priority).toBe("low");
-  expect(documents[0].frontMatter.labels).toEqual(["bug", "confirmed"]);
+  expect(documents[0].frontMatter.labels).toEqual(["BUG", "CONFIRMED"]);
   expect(documents[0].frontMatter.updated_at).not.toBe(issue.updated_at);
   expect(documents[0].body).toBe("Keep this body intact.\n");
+});
+
+test("modify-metadata can add a new label only with --allow-new-label", async () => {
+  const workspace = await makeWorkspace();
+  await seedLabelRegistry(workspace, ["AUTH"]);
+
+  const issue: Issue = {
+    id: "550e8400-e29b-41d4-a716-446655440200",
+    title: "Registry update",
+    status: "open",
+    labels: ["AUTH"],
+    created_at: "2026-04-01T14:30:00Z",
+    updated_at: "2026-04-01T14:30:00Z",
+  };
+
+  await seedIssue(workspace, issue, "Keep this body intact.\n");
+
+  const rejected = await runCli(workspace, [
+    "modify-metadata",
+    "--id",
+    issue.id,
+    "--labels",
+    "auth",
+    "--labels",
+    "bug",
+  ]);
+
+  expect(rejected.exitCode).toBe(1);
+  expect(rejected.stderr).toContain("Label is not registered: BUG");
+
+  const accepted = await runCli(workspace, [
+    "modify-metadata",
+    "--id",
+    issue.id,
+    "--labels",
+    "auth",
+    "--labels",
+    "bug",
+    "--allow-new-label",
+  ]);
+
+  expect(accepted.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents[0].frontMatter.labels).toEqual(["AUTH", "BUG"]);
+});
+
+test("modify-metadata does not persist registry updates when rename collides", async () => {
+  const workspace = await makeWorkspace();
+  await seedLabelRegistry(workspace, ["AUTH"]);
+
+  await seedIssue(workspace, {
+    id: "550e8400-e29b-41d4-a716-446655440201",
+    title: "Source issue",
+    status: "open",
+    labels: ["AUTH"],
+    created_at: "2026-04-01T14:30:00Z",
+    updated_at: "2026-04-01T14:30:00Z",
+  });
+
+  await seedIssue(workspace, {
+    id: "550e8400-e29b-41d4-a716-446655440202",
+    title: "Target issue",
+    status: "closed",
+    labels: ["AUTH"],
+    created_at: "2026-04-01T14:30:00Z",
+    updated_at: "2026-04-01T14:30:00Z",
+  });
+
+  const result = await runCli(workspace, [
+    "modify-metadata",
+    "--id",
+    "550e8400-e29b-41d4-a716-446655440201",
+    "--title",
+    "Target issue",
+    "--status",
+    "closed",
+    "--labels",
+    "auth",
+    "--labels",
+    "bug",
+    "--allow-new-label",
+  ]);
+
+  expect(result.exitCode).toBe(1);
+
+  const labelsResult = await runCli(workspace, ["labels"]);
+  expect(labelsResult.stdout).toBe("AUTH");
+
+  const showResult = await runCli(workspace, [
+    "show",
+    "--id",
+    "550e8400-e29b-41d4-a716-446655440201",
+  ]);
+  const payload = parseJsonOutput<{ data: { issue: Issue } }>(showResult.stdout);
+  expect(payload.data.issue.title).toBe("Source issue");
+  expect(payload.data.issue.status).toBe("open");
+  expect(payload.data.issue.labels).toEqual(["AUTH"]);
 });
 
 test("touch updates only updated_at and preserves body and file path", async () => {
@@ -297,7 +483,7 @@ test("touch updates only updated_at and preserves body and file path", async () 
     title: "Touch me",
     status: "open",
     priority: "medium",
-    labels: ["docs"],
+    labels: ["DOCS"],
     created_at: "2026-03-28T09:00:00Z",
     updated_at: "2026-03-28T09:00:00Z",
   };
@@ -330,7 +516,7 @@ test("archive moves an issue under archive, closes it, and show still finds it",
     title: "Archive me",
     status: "working",
     priority: "medium",
-    labels: ["ops"],
+    labels: ["OPS"],
     created_at: "2026-03-28T09:00:00Z",
     updated_at: "2026-03-28T09:00:00Z",
   };
