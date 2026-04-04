@@ -121,6 +121,128 @@ test("list command sorts issues and applies status and priority filters", async 
   expect(priorityResult.stdout).toBe("[open] Older issue (low) #docs (2026-03-28)");
 });
 
+test("list command filters by labels using match-any semantics", async () => {
+  const workspace = await makeWorkspace();
+
+  await seedIssue(workspace, {
+    id: "550e8400-e29b-41d4-a716-446655440100",
+    title: "Auth bug",
+    status: "open",
+    priority: "high",
+    labels: ["auth", "bug"],
+    created_at: "2026-04-01T09:00:00Z",
+    updated_at: "2026-04-01T09:00:00Z",
+  });
+
+  await seedIssue(workspace, {
+    id: "550e8400-e29b-41d4-a716-446655440101",
+    title: "Docs refresh",
+    status: "working",
+    priority: "low",
+    labels: ["docs"],
+    created_at: "2026-04-02T09:00:00Z",
+    updated_at: "2026-04-02T09:00:00Z",
+  });
+
+  await seedIssue(workspace, {
+    id: "550e8400-e29b-41d4-a716-446655440102",
+    title: "Infra cleanup",
+    status: "open",
+    labels: ["infra"],
+    created_at: "2026-04-03T09:00:00Z",
+    updated_at: "2026-04-03T09:00:00Z",
+  });
+
+  const result = await runCli(workspace, [
+    "list",
+    "--labels",
+    "docs",
+    "--labels",
+    "bug",
+  ]);
+
+  expect(result.exitCode).toBe(0);
+  expect(result.stdout).toBe(
+    "[working] Docs refresh (low) #docs (2026-04-02)\n[open] Auth bug (high) #auth #bug (2026-04-01)",
+  );
+});
+
+test("show command returns issue metadata, body, path, and archived state", async () => {
+  const workspace = await makeWorkspace();
+  const issue: Issue = {
+    id: "550e8400-e29b-41d4-a716-446655440103",
+    title: "Show me",
+    status: "open",
+    priority: "medium",
+    labels: ["demo"],
+    created_at: "2026-04-01T10:00:00Z",
+    updated_at: "2026-04-01T10:00:00Z",
+  };
+
+  await seedIssue(workspace, issue, "Issue body.\n");
+
+  const result = await runCli(workspace, ["show", "--id", issue.id]);
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr).toBe("");
+
+  const payload = parseJsonOutput<{
+    success: boolean;
+    data: {
+      issue: Issue & {
+        body: string;
+        path: string;
+        relativePath: string;
+        archived: boolean;
+      };
+    };
+  }>(result.stdout);
+
+  expect(payload.success).toBe(true);
+  expect(payload.data.issue.title).toBe(issue.title);
+  expect(payload.data.issue.body).toBe("Issue body.\n");
+  expect(payload.data.issue.relativePath).toBe("open_show-me_202604011000.md");
+  expect(payload.data.issue.path).toContain("/.issues/open_show-me_202604011000.md");
+  expect(payload.data.issue.archived).toBe(false);
+});
+
+test("search command matches title and body, case-insensitively", async () => {
+  const workspace = await makeWorkspace();
+
+  await seedIssue(
+    workspace,
+    {
+      id: "550e8400-e29b-41d4-a716-446655440104",
+      title: "Login investigation",
+      status: "working",
+      priority: "high",
+      labels: ["auth"],
+      created_at: "2026-04-02T10:00:00Z",
+      updated_at: "2026-04-02T10:00:00Z",
+    },
+    "Need to reproduce the broken SSO callback.\n",
+  );
+
+  await seedIssue(
+    workspace,
+    {
+      id: "550e8400-e29b-41d4-a716-446655440105",
+      title: "Dashboard copy",
+      status: "open",
+      labels: ["ui"],
+      created_at: "2026-04-01T10:00:00Z",
+      updated_at: "2026-04-01T10:00:00Z",
+    },
+    "Update the LOGIN helper text for guests.\n",
+  );
+
+  const result = await runCli(workspace, ["search", "--query", "login"]);
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr).toBe("");
+  expect(result.stdout).toBe(
+    "[working] Login investigation (high) #auth (2026-04-02) :: working_login-investigation_202604021000.md\n[open] Dashboard copy #ui (2026-04-01) :: open_dashboard-copy_202604011000.md",
+  );
+});
+
 test("modify-metadata updates front matter, preserves body, and renames the file", async () => {
   const workspace = await makeWorkspace();
   const issue: Issue = {
@@ -199,4 +321,66 @@ test("touch updates only updated_at and preserves body and file path", async () 
   expect(documents[0].frontMatter.priority).toBe(issue.priority);
   expect(documents[0].frontMatter.labels).toEqual(issue.labels);
   expect(documents[0].body).toBe("Body stays intact.\n");
+});
+
+test("archive moves an issue under archive, closes it, and show still finds it", async () => {
+  const workspace = await makeWorkspace();
+  const issue: Issue = {
+    id: "550e8400-e29b-41d4-a716-446655440106",
+    title: "Archive me",
+    status: "working",
+    priority: "medium",
+    labels: ["ops"],
+    created_at: "2026-03-28T09:00:00Z",
+    updated_at: "2026-03-28T09:00:00Z",
+  };
+
+  await seedIssue(workspace, issue, "Preserve this body.\n");
+
+  const archiveResult = await runCli(workspace, ["archive", "--id", issue.id]);
+  expect(archiveResult.exitCode).toBe(0);
+  expect(archiveResult.stderr).toBe("");
+
+  const archivePayload = parseJsonOutput<{
+    success: boolean;
+    data: { issue: Issue; path: string };
+  }>(archiveResult.stdout);
+
+  expect(archivePayload.success).toBe(true);
+  expect(archivePayload.data.issue.status).toBe("closed");
+  expect(archivePayload.data.path).toContain("/.issues/archive/closed_archive-me_202603280900.md");
+
+  const listResult = await runCli(workspace, ["list"]);
+  expect(listResult.exitCode).toBe(0);
+  expect(listResult.stdout).toBe("");
+
+  const searchResult = await runCli(workspace, ["search", "--query", "archive"]);
+  expect(searchResult.exitCode).toBe(0);
+  expect(searchResult.stdout).toBe("");
+
+  const showResult = await runCli(workspace, ["show", "--id", issue.id]);
+  expect(showResult.exitCode).toBe(0);
+
+  const showPayload = parseJsonOutput<{
+    data: {
+      issue: Issue & {
+        body: string;
+        relativePath: string;
+        archived: boolean;
+      };
+    };
+  }>(showResult.stdout);
+
+  expect(showPayload.data.issue.status).toBe("closed");
+  expect(showPayload.data.issue.body).toBe("Preserve this body.\n");
+  expect(showPayload.data.issue.relativePath).toBe(
+    "archive/closed_archive-me_202603280900.md",
+  );
+  expect(showPayload.data.issue.archived).toBe(true);
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].relativePath).toBe("archive/closed_archive-me_202603280900.md");
+  expect(documents[0].frontMatter.status).toBe("closed");
+  expect(documents[0].body).toBe("Preserve this body.\n");
 });

@@ -33,12 +33,16 @@ npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
 ```bash
 bun skills/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
 bun skills/scripts/index.ts new --title "Scratch note" --status open --blank-body
+bun skills/scripts/index.ts show --id <uuid>
+bun skills/scripts/index.ts search --query "login"
+bun skills/scripts/index.ts archive --id <uuid>
 ```
 
 ### List issues
 
 ```bash
 bun skills/scripts/index.ts list --status open
+bun skills/scripts/index.ts list --labels auth --labels bug
 bun skills/scripts/index.ts list --priority high
 ```
 
@@ -47,6 +51,7 @@ bun skills/scripts/index.ts list --priority high
 ```bash
 bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
 bun skills/scripts/index.ts touch --id <uuid>
+bun skills/scripts/index.ts archive --id <uuid>
 ```
 
 ## Custom Issue Directory
@@ -56,6 +61,7 @@ Use `--issue-dir` to specify a custom directory (default: `.issues`):
 ```bash
 bun skills/scripts/index.ts new --title "Fix bug" --status open --issue-dir custom-issues
 bun skills/scripts/index.ts list --issue-dir custom-issues
+bun skills/scripts/index.ts archive --id <uuid> --issue-dir custom-issues
 ```
 
 Both `list` and `modify-metadata` scan recursively. Use `--subdir` with `new` to create nested issues:
@@ -72,8 +78,11 @@ After installation, when using as a skill, resolve `{skillPath}` as the director
 {skillPath} = /path/to/dot-issues/skills
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
 bun {skillPath}/scripts/index.ts list --status open
+bun {skillPath}/scripts/index.ts search --query "login"
+bun {skillPath}/scripts/index.ts show --id <uuid>
 bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
 bun {skillPath}/scripts/index.ts touch --id <uuid>
+bun {skillPath}/scripts/index.ts archive --id <uuid>
 bun {skillPath}/scripts/index.ts list --issue-dir custom-issues
 ```
 
@@ -111,6 +120,13 @@ After manually editing the issue body, refresh the `updated_at` timestamp withou
 ```bash
 bun skills/scripts/index.ts touch --id <uuid>
 ```
+
+### Searching and Archiving
+
+- `search --query "text"` searches both title and body, case-insensitively
+- `list --labels a --labels b` matches issues containing any of the provided labels
+- `archive --id <uuid>` moves the issue under `.issues/archive/` and marks it `closed`
+- archived issues are excluded from default `list` and `search`, but `show --id <uuid>` still returns them
 
 ## Running Tests
 

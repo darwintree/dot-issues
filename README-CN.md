@@ -33,7 +33,11 @@ npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
 ```bash
 bun skills/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
 bun skills/scripts/index.ts new --title "Scratch note" --status open --blank-body
+bun skills/scripts/index.ts show --id <uuid>
+bun skills/scripts/index.ts search --query "login"
+bun skills/scripts/index.ts archive --id <uuid>
 bun skills/scripts/index.ts list --status open
+bun skills/scripts/index.ts list --labels auth --labels bug
 bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
 bun skills/scripts/index.ts touch --id <uuid>
 ```
@@ -43,6 +47,7 @@ bun skills/scripts/index.ts touch --id <uuid>
 ```bash
 bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues
 bun skills/scripts/index.ts list --issue-dir custom-issues
+bun skills/scripts/index.ts archive --id <uuid> --issue-dir custom-issues
 bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --issue-dir custom-issues
 bun skills/scripts/index.ts touch --id <uuid> --issue-dir custom-issues
 ```
@@ -59,8 +64,11 @@ bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-di
 {skillPath} = /path/to/dot-issues/skills
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
 bun {skillPath}/scripts/index.ts list --status open
+bun {skillPath}/scripts/index.ts search --query "login"
+bun {skillPath}/scripts/index.ts show --id <uuid>
 bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
 bun {skillPath}/scripts/index.ts touch --id <uuid>
+bun {skillPath}/scripts/index.ts archive --id <uuid>
 bun {skillPath}/scripts/index.ts list --issue-dir custom-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues --subdir team/auth
 ```
@@ -87,6 +95,13 @@ updated_at: "2026-04-01T14:30:00Z"
 如需跳过默认模板并创建空正文，可在 `new` 命令后追加 `--blank-body`。
 
 如需在手动编辑正文后仅刷新 `updated_at`，可使用 `touch --id <uuid>`。
+
+## 搜索与归档
+
+- `search --query "text"` 会在标题和正文中做不区分大小写的匹配
+- `list --labels a --labels b` 使用“命中任一标签即可”的语义
+- `archive --id <uuid>` 会将 issue 移到 `.issues/archive/` 下，并把状态改为 `closed`
+- 默认 `list` 和 `search` 不显示归档 issue，但 `show --id <uuid>` 仍可读取
 
 ## 测试
 

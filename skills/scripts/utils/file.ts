@@ -3,6 +3,8 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import type { FrontMatterData } from "../types";
 import { generateMarkdownContent, parseFrontMatter } from "./markdown";
 
+export const ARCHIVE_DIRNAME = "archive";
+
 export async function readMarkdownFile(filePath: string): Promise<{
   frontMatter: FrontMatterData;
   body: string;
@@ -19,9 +21,12 @@ export async function writeMarkdownFile(
   await writeFile(filePath, generateMarkdownContent(frontMatter, body), "utf8");
 }
 
-export async function listIssueFiles(dirPath: string): Promise<string[]> {
+export async function listIssueFiles(
+  dirPath: string,
+  options?: { includeArchived?: boolean },
+): Promise<string[]> {
   try {
-    return (await collectIssueFiles(dirPath)).sort();
+    return (await collectIssueFiles(dirPath, options?.includeArchived ?? true)).sort();
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];
@@ -63,15 +68,23 @@ export function resolveIssueSubdir(issueDir: string, subdir?: string): string {
   return targetDir;
 }
 
-async function collectIssueFiles(dirPath: string): Promise<string[]> {
+async function collectIssueFiles(
+  dirPath: string,
+  includeArchived: boolean,
+  isRoot = true,
+): Promise<string[]> {
   const entries = await readdir(dirPath, { withFileTypes: true });
   const filePaths = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
     .map((entry) => join(dirPath, entry.name));
   const nestedPaths = await Promise.all(
     entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => collectIssueFiles(join(dirPath, entry.name))),
+      .filter(
+        (entry) =>
+          entry.isDirectory() &&
+          (includeArchived || !isRoot || entry.name !== ARCHIVE_DIRNAME),
+      )
+      .map((entry) => collectIssueFiles(join(dirPath, entry.name), includeArchived, false)),
   );
 
   return [...filePaths, ...nestedPaths.flat()];

@@ -1,22 +1,31 @@
 import { isAbsolute, resolve } from "node:path";
 import { parseArgs } from "./parseArgs";
 import type { CommandContext, CommandResult } from "./types";
+import { runArchiveCommand } from "./commands/archive";
 import { runListCommand } from "./commands/list";
 import { runModifyCommand } from "./commands/modify";
 import { runNewCommand } from "./commands/new";
+import { runSearchCommand } from "./commands/search";
+import { runShowCommand } from "./commands/show";
 import { runTouchCommand } from "./commands/touch";
 
 const USAGE = `Usage:
   bun skills/scripts/index.ts new --title "Fix login bug" --status open [--priority high] [--labels bug] [--issue-dir .issues] [--subdir team/auth] [--blank-body]
-  bun skills/scripts/index.ts list [--status open] [--priority high] [--issue-dir .issues]
+  bun skills/scripts/index.ts list [--status open] [--priority high] [--labels bug] [--issue-dir .issues]
+  bun skills/scripts/index.ts search --query "login" [--status open] [--priority high] [--labels bug] [--issue-dir .issues]
+  bun skills/scripts/index.ts show --id <uuid> [--issue-dir .issues]
   bun skills/scripts/index.ts modify-metadata --id <uuid> [--title "..."] [--status closed] [--priority low] [--labels bug] [--issue-dir .issues]
-  bun skills/scripts/index.ts touch --id <uuid> [--issue-dir .issues]`;
+  bun skills/scripts/index.ts touch --id <uuid> [--issue-dir .issues]
+  bun skills/scripts/index.ts archive --id <uuid> [--issue-dir .issues]`;
 
 const COMMAND_HANDLERS = {
   new: runNewCommand,
   list: runListCommand,
+  search: runSearchCommand,
+  show: runShowCommand,
   "modify-metadata": runModifyCommand,
   touch: runTouchCommand,
+  archive: runArchiveCommand,
 } as const;
 
 export async function main(
@@ -48,7 +57,7 @@ export async function main(
       return 1;
     }
 
-    if (parsed.command === "list") {
+    if (parsed.command === "list" || parsed.command === "search") {
       const output = extractOutput(result);
       if (output) {
         console.log(output);

@@ -1,7 +1,7 @@
-import type { CommandContext, CommandResult, Issue, ParsedArgMap } from "../types";
-import { listIssueFiles, readMarkdownFile } from "../utils/file";
+import type { CommandContext, CommandResult, ParsedArgMap } from "../types";
+import { formatIssueLine, listLocatedIssues } from "../utils/issue";
 import {
-  toIssue,
+  validateLabels,
   validatePriority,
   validateStatus,
 } from "../utils/validate";
@@ -13,6 +13,7 @@ export async function runListCommand(
   try {
     const status = args.status;
     const priority = args.priority;
+    const labels = args.labels;
 
     if (status !== undefined && (typeof status !== "string" || !validateStatus(status))) {
       return fail("Invalid --status");
@@ -25,21 +26,18 @@ export async function runListCommand(
       return fail("Invalid --priority");
     }
 
-    if (args.labels !== undefined) {
-      return fail("Filtering by --labels is not implemented yet");
+    if (labels !== undefined && !validateLabels(labels)) {
+      return fail("Invalid --labels");
     }
 
-    const filePaths = await listIssueFiles(context.issueDir);
-    const issues = await Promise.all(
-      filePaths.map(async (filePath) => {
-        const { frontMatter } = await readMarkdownFile(filePath);
-        return toIssue(frontMatter);
-      }),
+    const issues = (await listLocatedIssues(context.issueDir, { includeArchived: false })).map(
+      (locatedIssue) => locatedIssue.issue,
     );
 
     const filteredIssues = issues
       .filter((issue) => !status || issue.status === status)
       .filter((issue) => !priority || issue.priority === priority)
+      .filter((issue) => !labels || labels.some((label) => issue.labels.includes(label)))
       .sort((left, right) => {
         return (
           new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
@@ -55,12 +53,6 @@ export async function runListCommand(
   } catch (error) {
     return fail("Failed to list issues", error);
   }
-}
-
-function formatIssueLine(issue: Issue): string {
-  const priority = issue.priority ? ` (${issue.priority})` : "";
-  const labels = issue.labels.length > 0 ? ` ${issue.labels.map((label) => `#${label}`).join(" ")}` : "";
-  return `[${issue.status}] ${issue.title}${priority}${labels} (${issue.created_at.slice(0, 10)})`;
 }
 
 function fail(message: string, error?: unknown): CommandResult {
