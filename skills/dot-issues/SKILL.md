@@ -1,11 +1,14 @@
 ---
 name: dot-issues
-description: Create, list, and update repo-local Markdown issue files with the bundled Bun CLI. Issues that live in your repo — plain Markdown, built for agents. Use for lightweight issue tracking without GitHub or Jira, including creating local issue notes, listing or filtering Markdown issues, updating issue metadata, or working with a custom `--issue-dir` and nested issue subdirectories.
+description: Use for managing repo-local Markdown issues with the bundled Bun CLI, including create, list, search, show, update metadata, touch, and archive.
 ---
 
 # dot-issues
 
 Resolve `{skillPath}` as the directory that contains this `SKILL.md`.
+
+Detailed command syntax and flag behavior live in `reference/`.
+Start with `reference/index.md`, then open the command-specific file when you need exact arguments or examples.
 
 Run commands by passing the script path explicitly. Do not rely on changing directories.
 
@@ -45,15 +48,7 @@ Follow these rules:
 - Once the work is confirmed to be distinct, use `new` to create the issue. Prefer setting `priority` and `labels` at creation time.
 - If the issue should live under a specific folder, combine `--issue-dir` with `--subdir`.
 
-### 2. Update an issue
-
-- When updating an existing issue, start with `show --id <uuid>` to read the full body and metadata, and treat `id` as the stable handle.
-- Edit the issue body directly in Markdown. The body is user-owned content, so do not edit front matter by hand.
-- If only the body changed, use `touch --id <uuid>` to refresh `updated_at`.
-- If the title, status, priority, or labels changed, use `modify-metadata` instead of editing YAML manually.
-- When an issue is finished or should leave the active queue, use `archive --id <uuid>`. Archived issues disappear from default `list` and `search`, but remain readable through `show`.
-
-### 3. Find an issue
+### 2. Find an issue
 
 Choose one command or a combination based on the situation.
 
@@ -61,3 +56,17 @@ Choose one command or a combination based on the situation.
 - Use `list --status ...`, `list --priority ...`, or `list --labels ...` for structured filtering when you already know the criteria.
 - Use `search --query "text"` for title-and-body keyword search when you only remember fragments or rough terms.
 - Use `show --id <uuid>` when you already know the stable identifier and want the full issue, including archived ones.
+
+### 3. Resolve an issue
+
+- First locate the target issue using the command that best fits the situation, then read the current issue body and metadata before making changes.
+- Solve the underlying problem, then update the issue body directly in Markdown with the resolution details, progress notes, and any completed checkboxes.
+- If the issue is fully resolved and should leave the active queue, use `archive --id <uuid>`.
+- If the issue still needs follow-up after updating the body, use `touch --id <uuid>` to refresh `updated_at`.
+
+### 4. Label management
+
+- Before creating a new issue, run `labels sync`, then read the current available labels from the registry.
+- Prefer existing labels whenever they express the issue clearly enough.
+- If the current label set is not expressive enough, add a new label during issue creation with `--allow-new-label`.
+- Prefer these default labels when they fit: `TECH DEBT`, `BUG`, and `FEATURE REQUEST`.
