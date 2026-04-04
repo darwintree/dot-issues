@@ -36,3 +36,28 @@ Follow these rules:
 - Expect `list` and `modify-metadata` to scan `--issue-dir` recursively.
 - Expect `show` to find archived issues too.
 - Use `new --subdir` to create an issue in a nested folder under `--issue-dir`.
+
+## Common Patterns
+
+### 1. Create an issue
+
+- Before creating a new issue, usually check `list` or `search --query "text"` first to avoid duplicates.
+- Once the work is confirmed to be distinct, use `new` to create the issue. Prefer setting `priority` and `labels` at creation time.
+- If the issue should live under a specific folder, combine `--issue-dir` with `--subdir`.
+
+### 2. Update an issue
+
+- When updating an existing issue, start with `show --id <uuid>` to read the full body and metadata, and treat `id` as the stable handle.
+- Edit the issue body directly in Markdown. The body is user-owned content, so do not edit front matter by hand.
+- If only the body changed, use `touch --id <uuid>` to refresh `updated_at`.
+- If the title, status, priority, or labels changed, use `modify-metadata` instead of editing YAML manually.
+- When an issue is finished or should leave the active queue, use `archive --id <uuid>`. Archived issues disappear from default `list` and `search`, but remain readable through `show`.
+
+### 3. Find an issue
+
+Choose one command or a combination based on the situation.
+
+- Use `list` to browse the current active queue.
+- Use `list --status ...`, `list --priority ...`, or `list --labels ...` for structured filtering when you already know the criteria.
+- Use `search --query "text"` for title-and-body keyword search when you only remember fragments or rough terms.
+- Use `show --id <uuid>` when you already know the stable identifier and want the full issue, including archived ones.
