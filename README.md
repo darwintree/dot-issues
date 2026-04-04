@@ -16,7 +16,8 @@ A zero-dependency Bun CLI that maintains local issue lists as Markdown files wit
 
 ## Project Structure
 
-- `skills/scripts/` – CLI source code
+- `src/` – local development entrypoint
+- `skills/dot-issues/scripts/` – canonical CLI source code for skill distribution
 - `.issues/` – Default issue Markdown directory
 - `tests/` – Critical path tests
 
@@ -28,62 +29,30 @@ npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
 
 ## Quick Start
 
-### Create an issue
+Resolve `{skillPath}` as the directory containing `SKILL.md`:
 
 ```bash
-bun skills/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
-bun skills/scripts/index.ts new --title "Scratch note" --status open --blank-body
-bun skills/scripts/index.ts show --id <uuid>
-bun skills/scripts/index.ts search --query "login"
-bun skills/scripts/index.ts archive --id <uuid>
-```
-
-### List issues
-
-```bash
-bun skills/scripts/index.ts list --status open
-bun skills/scripts/index.ts list --labels auth --labels bug
-bun skills/scripts/index.ts list --priority high
-```
-
-### Update metadata
-
-```bash
-bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
-bun skills/scripts/index.ts touch --id <uuid>
-bun skills/scripts/index.ts archive --id <uuid>
-```
-
-## Custom Issue Directory
-
-Use `--issue-dir` to specify a custom directory (default: `.issues`):
-
-```bash
-bun skills/scripts/index.ts new --title "Fix bug" --status open --issue-dir custom-issues
-bun skills/scripts/index.ts list --issue-dir custom-issues
-bun skills/scripts/index.ts archive --id <uuid> --issue-dir custom-issues
-```
-
-Both `list` and `modify-metadata` scan recursively. Use `--subdir` with `new` to create nested issues:
-
-```bash
-bun skills/scripts/index.ts new --title "Fix bug" --status open --issue-dir custom-issues --subdir team/auth
-```
-
-## Distributing as a Skill
-
-After installation, when using as a skill, resolve `{skillPath}` as the directory containing `SKILL.md`:
-
-```bash
-{skillPath} = /path/to/dot-issues/skills
+{skillPath} = /path/to/dot-issues/skills/dot-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
+bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --blank-body
 bun {skillPath}/scripts/index.ts list --status open
+bun {skillPath}/scripts/index.ts list --labels auth --labels bug
 bun {skillPath}/scripts/index.ts search --query "login"
 bun {skillPath}/scripts/index.ts show --id <uuid>
 bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
 bun {skillPath}/scripts/index.ts touch --id <uuid>
 bun {skillPath}/scripts/index.ts archive --id <uuid>
 bun {skillPath}/scripts/index.ts list --issue-dir custom-issues
+bun {skillPath}/scripts/index.ts new --title "Fix bug" --status open --issue-dir custom-issues --subdir team/auth
+```
+
+## Local Development
+
+Inside this repository, `src/` is a development alias to the skill source:
+
+```bash
+bun src/index.ts new --title "Fix login bug" --status open
+bun src/index.ts list
 ```
 
 ## Issue File Format
@@ -110,7 +79,7 @@ When creating a new issue, the body defaults to a template with sections for `Pr
 Skip the template with `--blank-body`:
 
 ```bash
-bun skills/scripts/index.ts new --title "Note" --status open --blank-body
+bun {skillPath}/scripts/index.ts new --title "Note" --status open --blank-body
 ```
 
 ### Updating `updated_at` Only
@@ -118,7 +87,7 @@ bun skills/scripts/index.ts new --title "Note" --status open --blank-body
 After manually editing the issue body, refresh the `updated_at` timestamp without changing metadata:
 
 ```bash
-bun skills/scripts/index.ts touch --id <uuid>
+bun {skillPath}/scripts/index.ts touch --id <uuid>
 ```
 
 ### Searching and Archiving

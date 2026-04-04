@@ -1,18 +1,18 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
-import type { Issue } from "../skills/scripts/types";
-import { writeLabelRegistry } from "../skills/scripts/utils/labels";
-import { listIssueFiles } from "../skills/scripts/utils/file";
-import { issueToFrontMatter } from "../skills/scripts/utils/issue";
+import type { Issue } from "../src/types";
+import { writeLabelRegistry } from "../src/utils/labels";
+import { listIssueFiles } from "../src/utils/file";
+import { issueToFrontMatter } from "../src/utils/issue";
 import {
   generateFileName,
   generateMarkdownContent,
-} from "../skills/scripts/utils/markdown";
-import { parseFrontMatter } from "../skills/scripts/utils/markdown";
+} from "../src/utils/markdown";
+import { parseFrontMatter } from "../src/utils/markdown";
 
 const REPO_ROOT = resolve(import.meta.dir, "..");
-const CLI_ENTRY = join(REPO_ROOT, "skills/scripts/index.ts");
+const CLI_ENTRY = join(REPO_ROOT, "src/index.ts");
 
 export async function createWorkspace(): Promise<string> {
   return mkdtemp(join(tmpdir(), "dot-issues-"));

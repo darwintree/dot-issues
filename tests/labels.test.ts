@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import type { Issue } from "../skills/scripts/types";
+import type { Issue } from "../src/types";
 import {
   createWorkspace,
   destroyWorkspace,

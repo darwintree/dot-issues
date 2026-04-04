@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
-import { DEFAULT_ISSUE_BODY } from "../skills/scripts/commands/new";
-import type { Issue } from "../skills/scripts/types";
-import { toIsoMinuteString } from "../skills/scripts/utils/markdown";
+import { DEFAULT_ISSUE_BODY } from "../src/commands/new";
+import type { Issue } from "../src/types";
+import { toIsoMinuteString } from "../src/utils/markdown";
 import {
   createWorkspace,
   destroyWorkspace,
