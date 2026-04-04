@@ -16,7 +16,8 @@
 
 ## 目录
 
-- `skills/scripts/`：CLI 源码
+- `src/`：本地开发入口
+- `skills/dot-issues/scripts/`：作为 skill 分发时的 CLI 源码
 - `.issues/`：issue Markdown 文件目录
 - `tests/`：关键路径测试
 
@@ -28,42 +29,14 @@ npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
 
 ## 使用方式
 
-仓库开发态可以直接从仓库根目录运行：
+安装后，先确定 `{skillPath}`。它就是包含 `SKILL.md` 的目录，然后显式传入脚本路径：
 
 ```bash
-bun skills/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
-bun skills/scripts/index.ts new --title "Scratch note" --status open --blank-body
-bun skills/scripts/index.ts show --id <uuid>
-bun skills/scripts/index.ts search --query "login"
-bun skills/scripts/index.ts archive --id <uuid>
-bun skills/scripts/index.ts list --status open
-bun skills/scripts/index.ts list --labels auth --labels bug
-bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
-bun skills/scripts/index.ts touch --id <uuid>
-```
-
-如需指定 issue 基础目录，可以传 `--issue-dir`，默认值是 `.issues`：
-
-```bash
-bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues
-bun skills/scripts/index.ts list --issue-dir custom-issues
-bun skills/scripts/index.ts archive --id <uuid> --issue-dir custom-issues
-bun skills/scripts/index.ts modify-metadata --id <uuid> --status closed --issue-dir custom-issues
-bun skills/scripts/index.ts touch --id <uuid> --issue-dir custom-issues
-```
-
-`list` 和 `modify-metadata` 会递归扫描 `--issue-dir` 下的所有子目录。`new` 如需写入某个子目录，可额外传 `--subdir`：
-
-```bash
-bun skills/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues --subdir team/auth
-```
-
-安装后，作为 skill 分发或单独使用时，先确定 `{skillPath}`。它就是包含 `SKILL.md` 的目录，然后显式传入脚本路径：
-
-```bash
-{skillPath} = /path/to/dot-issues/skills
+{skillPath} = /path/to/dot-issues/skills/dot-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
+bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --blank-body
 bun {skillPath}/scripts/index.ts list --status open
+bun {skillPath}/scripts/index.ts list --labels auth --labels bug
 bun {skillPath}/scripts/index.ts search --query "login"
 bun {skillPath}/scripts/index.ts show --id <uuid>
 bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> --status closed --priority low
@@ -71,6 +44,13 @@ bun {skillPath}/scripts/index.ts touch --id <uuid>
 bun {skillPath}/scripts/index.ts archive --id <uuid>
 bun {skillPath}/scripts/index.ts list --issue-dir custom-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues --subdir team/auth
+```
+
+仓库开发态下，`src/` 只是指向 skill 源码的开发别名：
+
+```bash
+bun src/index.ts new --title "Fix login bug" --status open
+bun src/index.ts list
 ```
 
 ## issue 文件格式

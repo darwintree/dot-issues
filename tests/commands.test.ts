@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
-import { DEFAULT_ISSUE_BODY } from "../skills/scripts/commands/new";
-import type { Issue } from "../skills/scripts/types";
-import { toIsoMinuteString } from "../skills/scripts/utils/markdown";
+import { DEFAULT_ISSUE_BODY } from "../src/commands/new";
+import type { Issue } from "../src/types";
+import { toIsoMinuteString } from "../src/utils/markdown";
 import {
   createWorkspace,
   destroyWorkspace,
@@ -168,6 +168,22 @@ test("list command returns empty output for an empty workspace", async () => {
   expect(result.exitCode).toBe(0);
   expect(result.stdout).toBe("");
   expect(result.stderr).toBe("");
+});
+
+test("list command rejects unexpected positional arguments", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, ["list", "unexpected"]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("Unexpected argument: unexpected");
+});
+
+test("labels command rejects unexpected positional arguments after the subcommand", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, ["labels", "sync", "unexpected"]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("Unexpected argument: unexpected");
 });
 
 test("list command sorts issues and applies status and priority filters", async () => {
