@@ -76,6 +76,12 @@ updated_at: "2026-04-01T14:30:00Z"
 
 如需在手动编辑正文后仅刷新 `updated_at`，可使用 `touch --id <uuid>`。
 
+### 文件名 slug
+
+- 文件名由 `status + title slug + created_at` 组成
+- slug 会尽量保留 Unicode 字母和数字，包括 CJK 字符
+- 文件名只用于提升可读性，稳定标识仍然是 `id`
+
 ## 搜索与归档
 
 - `search --query "text"` 会在标题和正文中做不区分大小写的匹配

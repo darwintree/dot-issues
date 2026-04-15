@@ -90,7 +90,7 @@ export function titleToSlug(title: string): string {
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
 

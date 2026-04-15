@@ -77,6 +77,26 @@ test("new command writes an empty body when --blank-body is provided", async () 
   expect(documents[0].body).toBe("");
 });
 
+test("new command preserves CJK characters in the generated filename", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, [
+    "new",
+    "--title",
+    "收敛测试运行环境依赖并修复时间抖动导致的不稳定",
+    "--status",
+    "open",
+    "--blank-body",
+  ]);
+
+  expect(result.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].name).toStartWith(
+    "open_收敛测试运行环境依赖并修复时间抖动导致的不稳定_",
+  );
+});
+
 test("new command rejects unregistered labels unless --allow-new-label is provided", async () => {
   const workspace = await makeWorkspace();
 
@@ -159,6 +179,34 @@ test("new command does not persist registry updates when creation fails", async 
   expect(result.exitCode).toBe(1);
   const labelsResult = await runCli(workspace, ["labels"]);
   expect(labelsResult.stdout).toBe("");
+});
+
+test("modify-metadata renames the file using a CJK title slug", async () => {
+  const workspace = await makeWorkspace();
+  const issue = {
+    id: "550e8400-e29b-41d4-a716-446655440777",
+    title: "Temporary title",
+    status: "open" as const,
+    created_at: "2026-04-01T14:30:00Z",
+    updated_at: "2026-04-01T14:30:00Z",
+    labels: [],
+  };
+  await seedIssue(workspace, issue);
+
+  const result = await runCli(workspace, [
+    "modify-metadata",
+    "--id",
+    issue.id,
+    "--title",
+    "修复中文文件名降级问题",
+  ]);
+
+  expect(result.exitCode).toBe(0);
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].name).toBe("open_修复中文文件名降级问题_202604011430.md");
+  expect(documents[0].frontMatter.title).toBe("修复中文文件名降级问题");
 });
 
 test("list command returns empty output for an empty workspace", async () => {
