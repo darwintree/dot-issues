@@ -90,6 +90,12 @@ After manually editing the issue body, refresh the `updated_at` timestamp withou
 bun {skillPath}/scripts/index.ts touch --id <uuid>
 ```
 
+### Filename Slugs
+
+- filenames are generated from `status + title slug + created_at`
+- the slug keeps Unicode letters and numbers where possible, including CJK characters
+- filenames remain human-readable only; `id` is still the stable issue identifier
+
 ### Searching and Archiving
 
 - `search --query "text"` searches both title and body, case-insensitively

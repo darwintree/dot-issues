@@ -29,3 +29,4 @@ Conventions:
 - Use `modify-metadata` for metadata changes
 - Label input is case-insensitive, but all persisted and displayed labels are uppercase
 - `new` and `modify-metadata` require labels to exist in the registry unless `--allow-new-label` is used
+- Generated filename slugs preserve Unicode letters and numbers where possible, including CJK characters
