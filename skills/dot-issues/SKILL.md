@@ -14,7 +14,7 @@ Run commands by passing the script path explicitly. Do not rely on changing dire
 
 ```bash
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
-bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --blank-body
+bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --content "Initial note."
 bun {skillPath}/scripts/index.ts list --status open --priority high --labels auth
 bun {skillPath}/scripts/index.ts search --query "login"
 bun {skillPath}/scripts/index.ts show --id <uuid>
@@ -29,7 +29,7 @@ Follow these rules:
 
 - Let the CLI manage front matter. Update metadata with commands instead of editing YAML manually.
 - Edit the Markdown body directly when only issue content changes. The default body template is only a starting point and can be reshaped freely.
-- Use `new --blank-body` when a new issue should start with an empty Markdown body instead of the default template.
+- Use `new --content "..."` when a new issue should start with a specific Markdown body instead of the default template.
 - Use `touch --id <uuid>` to refresh `updated_at` after manual body edits without changing other metadata.
 - Use `show --id <uuid>` when you need the full issue body and stable metadata by identifier.
 - Use `search --query "text"` to search issue titles and bodies.

@@ -34,7 +34,7 @@ npx skills add https://github.com/darwintree/dot-issues --skill dot-issues
 ```bash
 {skillPath} = /path/to/dot-issues/skills/dot-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
-bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --blank-body
+bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --content "Initial note."
 bun {skillPath}/scripts/index.ts list --status open
 bun {skillPath}/scripts/index.ts list --labels auth --labels bug
 bun {skillPath}/scripts/index.ts search --query "login"
@@ -72,7 +72,7 @@ updated_at: "2026-04-01T14:30:00Z"
 
 新建 issue 时，正文默认会带上一个通用模板，包含 `Problem`、`Issue Assessment`、`Verification Checklist`、`Progress Log` 几个区块，并用 HTML 注释提示可以按需调整格式。
 
-如需跳过默认模板并创建空正文，可在 `new` 命令后追加 `--blank-body`。
+如需指定初始正文，可在 `new` 命令后追加 `--content "Initial note."`。
 
 如需在手动编辑正文后仅刷新 `updated_at`，可使用 `touch --id <uuid>`。
 

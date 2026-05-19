@@ -63,6 +63,7 @@ export async function runNewCommand(
 ): Promise<CommandResult<{ issue: Issue; path: string }>> {
   try {
     const blankBody = args["blank-body"];
+    const content = args.content;
     const title = args.title;
     const status = args.status;
     const priority = args.priority;
@@ -72,6 +73,14 @@ export async function runNewCommand(
 
     if (blankBody !== undefined && blankBody !== true) {
       return fail("Invalid --blank-body");
+    }
+
+    if (content !== undefined && typeof content !== "string") {
+      return fail("Invalid --content");
+    }
+
+    if (content !== undefined && blankBody === true) {
+      return fail("Cannot combine --content and --blank-body");
     }
 
     if (allowNewLabel !== undefined && allowNewLabel !== true) {
@@ -138,7 +147,7 @@ export async function runNewCommand(
     await writeMarkdownFile(
       filePath,
       issueToFrontMatter(issue),
-      blankBody ? "" : DEFAULT_ISSUE_BODY,
+      content ?? (blankBody ? "" : DEFAULT_ISSUE_BODY),
     );
 
     try {

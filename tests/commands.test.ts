@@ -57,7 +57,50 @@ test("new command creates an issue file with generated metadata", async () => {
   expect(documents[0].body).toBe(DEFAULT_ISSUE_BODY);
 });
 
-test("new command writes an empty body when --blank-body is provided", async () => {
+test("new command writes provided content as the body", async () => {
+  const workspace = await makeWorkspace();
+  const content = "First line.\n\n- checklist item\n";
+  const result = await runCli(workspace, [
+    "new",
+    "--title",
+    "Content issue",
+    "--status",
+    "open",
+    "--content",
+    content,
+  ]);
+
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr).toBe("");
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].frontMatter.title).toBe("Content issue");
+  expect(documents[0].body).toBe(content);
+});
+
+test("new command writes an empty body when --content is empty", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, [
+    "new",
+    "--title",
+    "Empty content issue",
+    "--status",
+    "open",
+    "--content",
+    "",
+  ]);
+
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr).toBe("");
+
+  const documents = await readIssueDocuments(workspace);
+  expect(documents).toHaveLength(1);
+  expect(documents[0].frontMatter.title).toBe("Empty content issue");
+  expect(documents[0].body).toBe("");
+});
+
+test("new command keeps legacy --blank-body compatibility", async () => {
   const workspace = await makeWorkspace();
   const result = await runCli(workspace, [
     "new",
@@ -75,6 +118,24 @@ test("new command writes an empty body when --blank-body is provided", async () 
   expect(documents).toHaveLength(1);
   expect(documents[0].frontMatter.title).toBe("Blank body issue");
   expect(documents[0].body).toBe("");
+});
+
+test("new command rejects --content with --blank-body", async () => {
+  const workspace = await makeWorkspace();
+  const result = await runCli(workspace, [
+    "new",
+    "--title",
+    "Conflicting body options",
+    "--status",
+    "open",
+    "--content",
+    "Body",
+    "--blank-body",
+  ]);
+
+  expect(result.exitCode).toBe(1);
+  expect(result.stdout).toBe("");
+  expect(result.stderr).toContain("Cannot combine --content and --blank-body");
 });
 
 test("new command preserves CJK characters in the generated filename", async () => {

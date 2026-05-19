@@ -11,7 +11,7 @@ import { runShowCommand } from "./commands/show";
 import { runTouchCommand } from "./commands/touch";
 
 const USAGE = `Usage:
-  bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open [--priority high] [--labels bug] [--issue-dir .issues] [--subdir team/auth] [--blank-body] [--allow-new-label]
+  bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open [--content "Markdown body"] [--priority high] [--labels bug] [--issue-dir .issues] [--subdir team/auth] [--allow-new-label]
   bun {skillPath}/scripts/index.ts list [--status open] [--priority high] [--labels bug] [--issue-dir .issues]
   bun {skillPath}/scripts/index.ts search --query "login" [--status open] [--priority high] [--labels bug] [--issue-dir .issues]
   bun {skillPath}/scripts/index.ts show --id <uuid> [--issue-dir .issues]

@@ -3,6 +3,7 @@ import type { ParsedArgMap, ParsedArgs } from "./types";
 
 const OPTION_CONFIG = {
   title: { type: "string" },
+  content: { type: "string" },
   status: { type: "string" },
   priority: { type: "string" },
   labels: { type: "string", multiple: true },

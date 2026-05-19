@@ -34,7 +34,7 @@ Resolve `{skillPath}` as the directory containing `SKILL.md`:
 ```bash
 {skillPath} = /path/to/dot-issues/skills/dot-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --priority high --labels auth --labels bug
-bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --blank-body
+bun {skillPath}/scripts/index.ts new --title "Scratch note" --status open --content "Initial note."
 bun {skillPath}/scripts/index.ts list --status open
 bun {skillPath}/scripts/index.ts list --labels auth --labels bug
 bun {skillPath}/scripts/index.ts search --query "login"
@@ -76,10 +76,10 @@ The body can be freely edited.
 
 When creating a new issue, the body defaults to a template with sections for `Problem`, `Issue Assessment`, `Verification Checklist`, and `Progress Log`. The format can be customized as needed.
 
-Skip the template with `--blank-body`:
+Set a custom initial body with `--content`:
 
 ```bash
-bun {skillPath}/scripts/index.ts new --title "Note" --status open --blank-body
+bun {skillPath}/scripts/index.ts new --title "Note" --status open --content "Initial note."
 ```
 
 ### Updating `updated_at` Only
