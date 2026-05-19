@@ -35,6 +35,7 @@ Follow these rules:
 - Use `show --id <uuid>` when you need the full issue body and stable metadata by identifier.
 - Use `search --query "text"` to search issue titles and bodies.
 - Use `archive --id <uuid>` to move completed issues under the archive subtree; archived issues are excluded from default `list` and `search`.
+- When linking issue documents to each other, prefer Obsidian wiki links like `[[target note]]` or `[[path/to/target|label]]` over Markdown links unless the surrounding document already requires Markdown-style links.
 - When `modify-metadata` or `archive` changes an issue file path, the CLI automatically updates Markdown and Obsidian links inside `--issue-dir`, including links inside the moved issue.
 - Use `rename-references --from <old> --to <new> --dry-run` to inspect or repair reference updates without moving files.
 - Treat `id` as the stable identifier. Filenames are for readability only.
