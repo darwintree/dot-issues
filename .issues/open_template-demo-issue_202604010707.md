@@ -4,7 +4,7 @@ id: "77e2e84f-fe20-4ee2-96d1-24c77ee085a9"
 title: "Template demo issue"
 status: "open"
 priority: "medium"
-labels: ["demo", "template"]
+labels: ["DEMO", "TEMPLATE"]
 created_at: "2026-04-01T07:07:00Z"
 updated_at: "2026-04-01T07:07:00Z"
 ---
