@@ -6,6 +6,7 @@ import { runListCommand } from "./commands/list";
 import { runLabelsCommand } from "./commands/labels";
 import { runModifyCommand } from "./commands/modify";
 import { runNewCommand } from "./commands/new";
+import { runRenameReferencesCommand } from "./commands/renameReferences";
 import { runSearchCommand } from "./commands/search";
 import { runShowCommand } from "./commands/show";
 import { runTouchCommand } from "./commands/touch";
@@ -18,6 +19,7 @@ const USAGE = `Usage:
   bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> [--title "..."] [--status closed] [--priority low] [--labels bug] [--issue-dir .issues] [--allow-new-label]
   bun {skillPath}/scripts/index.ts touch --id <uuid> [--issue-dir .issues]
   bun {skillPath}/scripts/index.ts archive --id <uuid> [--issue-dir .issues]
+  bun {skillPath}/scripts/index.ts rename-references --from <relative-path> --to <relative-path> [--issue-dir .issues] [--dry-run]
   bun {skillPath}/scripts/index.ts labels [--issue-dir .issues]
   bun {skillPath}/scripts/index.ts labels sync [--issue-dir .issues]
   bun {skillPath}/scripts/index.ts labels remove --label <label> [--force] [--issue-dir .issues]
@@ -31,6 +33,7 @@ const COMMAND_HANDLERS = {
   "modify-metadata": runModifyCommand,
   touch: runTouchCommand,
   archive: runArchiveCommand,
+  "rename-references": runRenameReferencesCommand,
   labels: runLabelsCommand,
 } as const;
 

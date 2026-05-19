@@ -17,6 +17,7 @@ const OPTION_CONFIG = {
   force: { type: "boolean" },
   from: { type: "string" },
   to: { type: "string" },
+  "dry-run": { type: "boolean" },
 } as const;
 
 export function parseArgs(argv: string[]): ParsedArgs {

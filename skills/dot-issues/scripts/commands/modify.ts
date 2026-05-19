@@ -11,6 +11,16 @@ import {
 import { findIssueById, mergeIssueFrontMatter } from "../utils/issue";
 import { generateFileName, toIsoMinuteString } from "../utils/markdown";
 import {
+  applyReferenceRenamePlan,
+  buildReferenceRenamePlan,
+  getPlannedBodyForPath,
+  restoreAppliedReferenceUpdates,
+  summarizeReferenceRenameCounts,
+  toIssueRelativePath,
+  type AppliedReferenceUpdate,
+  type ReferenceRenameCounts,
+} from "../utils/references";
+import {
   normalizeLabels,
   validateLabels,
   validatePriority,
@@ -22,7 +32,13 @@ import {
 export async function runModifyCommand(
   args: ParsedArgMap,
   context: CommandContext,
-): Promise<CommandResult<{ issue: Issue; path: string }>> {
+): Promise<
+  CommandResult<{
+    issue: Issue;
+    path: string;
+    references: ReferenceRenameCounts;
+  }>
+> {
   try {
     const id = args.id;
     const title = args.title;
@@ -105,6 +121,22 @@ export async function runModifyCommand(
       return fail(`Issue file already exists: ${nextPath}`);
     }
 
+    const referencePlan =
+      nextPath === foundIssue.filePath
+        ? undefined
+        : await buildReferenceRenamePlan(
+            context.issueDir,
+            foundIssue.relativePath,
+            toIssueRelativePath(context.issueDir, nextPath),
+            foundIssue.filePath,
+            nextPath,
+          );
+    const references = summarizeReferenceRenameCounts(referencePlan);
+    const nextBody = referencePlan
+      ? getPlannedBodyForPath(referencePlan, nextPath, foundIssue.body)
+      : foundIssue.body;
+    let appliedReferenceUpdates: AppliedReferenceUpdate[] = [];
+
     try {
       if (nextPath !== foundIssue.filePath) {
         await rename(foundIssue.filePath, nextPath);
@@ -113,13 +145,21 @@ export async function runModifyCommand(
       await writeMarkdownFile(
         nextPath,
         mergeIssueFrontMatter(foundIssue.frontMatter, issue),
-        foundIssue.body,
+        nextBody,
       );
+
+      if (referencePlan) {
+        appliedReferenceUpdates = await applyReferenceRenamePlan(referencePlan, {
+          skipPaths: new Set([nextPath]),
+        });
+      }
 
       if (nextRegistryLabels) {
         await writeLabelRegistry(context.issueDir, nextRegistryLabels);
       }
     } catch (error) {
+      await restoreAppliedReferenceUpdates(appliedReferenceUpdates);
+
       if (nextPath !== foundIssue.filePath && (await fileExists(nextPath))) {
         await rename(nextPath, foundIssue.filePath);
       }
@@ -131,7 +171,7 @@ export async function runModifyCommand(
     return {
       success: true,
       message: "Issue modified successfully",
-      data: { issue, path: nextPath },
+      data: { issue, path: nextPath, references },
     };
   } catch (error) {
     return fail("Failed to modify issue", error);

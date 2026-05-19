@@ -21,6 +21,7 @@ bun {skillPath}/scripts/index.ts show --id <uuid>
 bun {skillPath}/scripts/index.ts modify-metadata --id <uuid> --status closed --labels bug
 bun {skillPath}/scripts/index.ts touch --id <uuid>
 bun {skillPath}/scripts/index.ts archive --id <uuid>
+bun {skillPath}/scripts/index.ts rename-references --from old/path.md --to new/path.md --dry-run
 bun {skillPath}/scripts/index.ts list --issue-dir custom-issues
 bun {skillPath}/scripts/index.ts new --title "Fix login bug" --status open --issue-dir custom-issues --subdir team/auth
 ```
@@ -34,6 +35,8 @@ Follow these rules:
 - Use `show --id <uuid>` when you need the full issue body and stable metadata by identifier.
 - Use `search --query "text"` to search issue titles and bodies.
 - Use `archive --id <uuid>` to move completed issues under the archive subtree; archived issues are excluded from default `list` and `search`.
+- When `modify-metadata` or `archive` changes an issue file path, the CLI automatically updates Markdown and Obsidian links inside `--issue-dir`, including links inside the moved issue.
+- Use `rename-references --from <old> --to <new> --dry-run` to inspect or repair reference updates without moving files.
 - Treat `id` as the stable identifier. Filenames are for readability only.
 - Use `--issue-dir` to override the default base directory `.issues`.
 - Expect `list` and `modify-metadata` to scan `--issue-dir` recursively.

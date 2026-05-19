@@ -17,12 +17,18 @@ Optional arguments:
 
 Notes:
 
-- Changes metadata only and does not modify the body
-- If `status` changes, the file is renamed to match
+- Changes metadata and preserves the issue body
+- If `title` or `status` changes the generated filename, the file is renamed to match
+- When the file is renamed, Markdown and Obsidian links to the old issue path are updated across the current issue base dir, including archived issues
+- Links inside the renamed issue that point to other known issue files are rebased relative to the issue's new location
+- Markdown inline link titles are preserved while paths are rewritten
+- Reference updates only scan Markdown bodies, not front matter
+- Passive reference updates do not refresh other issues' `updated_at`
 - Use `touch` when you only want to refresh `updated_at`
 - All labels are normalized to uppercase before storage
 - By default, every label must already exist in `{issueBaseDir}/labels.json`
 - `--allow-new-label` adds missing labels to the registry automatically
+- JSON output includes `data.references.filesChanged` and `data.references.referencesChanged`
 
 Examples:
 

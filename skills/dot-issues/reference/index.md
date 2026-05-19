@@ -19,6 +19,7 @@ Conventions:
 - [modify-metadata](./modify-metadata.md)
 - [touch](./touch.md)
 - [archive](./archive.md)
+- [rename-references](./rename-references.md)
 - [labels](./labels.md)
 
 ## Usage Notes
@@ -27,6 +28,7 @@ Conventions:
 - Before updating an issue, use `show --id <uuid>` to read the full content
 - If only the body changed, do not edit front matter manually; update `updated_at` with `touch`
 - Use `modify-metadata` for metadata changes
+- Use `rename-references` to manually repair issue links after a file move or failed reference update
 - Label input is case-insensitive, but all persisted and displayed labels are uppercase
 - `new` and `modify-metadata` require labels to exist in the registry unless `--allow-new-label` is used
 - Generated filename slugs preserve Unicode letters and numbers where possible, including CJK characters

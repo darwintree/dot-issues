@@ -8,12 +8,28 @@ import {
   mergeIssueFrontMatter,
 } from "../utils/issue";
 import { generateFileName, toIsoMinuteString } from "../utils/markdown";
+import {
+  applyReferenceRenamePlan,
+  buildReferenceRenamePlan,
+  getPlannedBodyForPath,
+  restoreAppliedReferenceUpdates,
+  summarizeReferenceRenameCounts,
+  toIssueRelativePath,
+  type AppliedReferenceUpdate,
+  type ReferenceRenameCounts,
+} from "../utils/references";
 import { validateUUID } from "../utils/validate";
 
 export async function runArchiveCommand(
   args: ParsedArgMap,
   context: CommandContext,
-): Promise<CommandResult<{ issue: Issue; path: string }>> {
+): Promise<
+  CommandResult<{
+    issue: Issue;
+    path: string;
+    references: ReferenceRenameCounts;
+  }>
+> {
   try {
     const id = args.id;
 
@@ -49,18 +65,46 @@ export async function runArchiveCommand(
       return fail(`Issue file already exists: ${nextPath}`);
     }
 
-    await mkdir(targetDir, { recursive: true });
-    await rename(foundIssue.filePath, nextPath);
-    await writeMarkdownFile(
+    const referencePlan = await buildReferenceRenamePlan(
+      context.issueDir,
+      foundIssue.relativePath,
+      toIssueRelativePath(context.issueDir, nextPath),
+      foundIssue.filePath,
       nextPath,
-      mergeIssueFrontMatter(foundIssue.frontMatter, issue),
-      foundIssue.body,
     );
+    const nextBody = getPlannedBodyForPath(referencePlan, nextPath, foundIssue.body);
+    let appliedReferenceUpdates: AppliedReferenceUpdate[] = [];
+
+    try {
+      await mkdir(targetDir, { recursive: true });
+      await rename(foundIssue.filePath, nextPath);
+      await writeMarkdownFile(
+        nextPath,
+        mergeIssueFrontMatter(foundIssue.frontMatter, issue),
+        nextBody,
+      );
+      appliedReferenceUpdates = await applyReferenceRenamePlan(referencePlan, {
+        skipPaths: new Set([nextPath]),
+      });
+    } catch (error) {
+      await restoreAppliedReferenceUpdates(appliedReferenceUpdates);
+
+      if (await fileExists(nextPath)) {
+        await rename(nextPath, foundIssue.filePath);
+      }
+
+      await writeMarkdownFile(foundIssue.filePath, foundIssue.frontMatter, foundIssue.body);
+      throw error;
+    }
 
     return {
       success: true,
       message: "Issue archived successfully",
-      data: { issue, path: nextPath },
+      data: {
+        issue,
+        path: nextPath,
+        references: summarizeReferenceRenameCounts(referencePlan),
+      },
     };
   } catch (error) {
     return fail("Failed to archive issue", error);
