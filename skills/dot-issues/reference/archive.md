@@ -14,6 +14,7 @@ Notes:
 
 - Moves the issue into the archive subtree
 - Sets the status to `closed`
+- Generates the archived filename as `{YYYYMMDD}_closed_{title-slug}.md` using the original `created_at` date
 - Updates Markdown and Obsidian links to the old issue path across the current issue base dir, including archived issues
 - Links inside the archived issue that point to other known issue files are rebased relative to the archived issue's new location
 - Markdown inline link titles are preserved while paths are rewritten

@@ -48,8 +48,8 @@
 14. 命令行参数采用显式参数形式，例如 `--status closed --priority high`，不采用交互式修改。
 15. `modify-metadata` 修改 `status` 时，需同时 rename 对应的 Markdown 文件。
 16. 目标使用场景以个人使用优先。
-17. Markdown 文件命名规则为 `{status}_{title-slug}_{YYYYMMDDHHmm}.md`，时间戳精确到分钟，秒数统一为 00。
-18. 文件名中的时间戳仅承载人类与 AI 可读性，不作为系统主键；系统主键为 front matter 中的 UUID `id`。
+17. Markdown 文件命名规则为 `{YYYYMMDD}_{status}_{title-slug}.md`，日期来自 issue 的 `created_at`。
+18. 文件名中的日期仅承载人类与 AI 可读性，不作为系统主键；系统主键为 front matter 中的 UUID `id`。
 19. `title-slug` 从 `title` 生成，规则为：转小写、多余空格转连字符、移除特殊字符，确保与 markdown 文件名一致。
 20. `status` 的允许值为：`open`、`working`、`closed`。
 21. 命令行参数解析采用 minimist 风格，如 `--labels bug --labels auth`。
@@ -123,18 +123,18 @@ updated_at: 2026-04-01T14:30:00Z
 
 ## 文件命名规则
 
-- 文件名格式：`{status}_{title-slug}_{YYYYMMDDHHmm}.md`
+- 文件名格式：`{YYYYMMDD}_{status}_{title-slug}.md`
+- `YYYYMMDD`：issue 创建日期，来自 `created_at`
 - `status`：issue 当前状态（`open`、`working`、`closed`）
 - `title-slug`：标题的 slug 形式（小写、非字母数字字符转连字符）
-- `YYYYMMDDHHmm`：issue 创建时间，精确到分钟（秒数统一为 00）
 - 文件名随 `status` 等 metadata 变更而变更
 - 系统主键为 front matter 中的 `id`（UUID），不依赖文件名
 
 示例：
 
 ```
-open_fix-login-bug_202604011430.md
-closed_fix-login-bug_202604011430.md
+20260401_open_fix-login-bug.md
+20260401_closed_fix-login-bug.md
 ```
 
 ## list 命令输出格式

@@ -20,7 +20,7 @@ Notes:
 - The command scans only Markdown issue files inside the current issue base dir, including `archive/`
 - Only Markdown bodies are updated; front matter is not scanned or rewritten
 - Standard Markdown inline links and Obsidian wikilinks are supported
-- Bare Obsidian wikilinks such as `[[open_example_202604011000|Example]]` are treated as references to `--from` when their filename basename matches the source path
+- Bare Obsidian wikilinks such as `[[20260401_open_example|Example]]` are treated as references to `--from` when their filename basename matches the source path
 - Markdown inline link titles are preserved while the path portion is rewritten
 - External URLs, anchors, absolute paths, non-Markdown links, and reference-style links are not rewritten
 - `--from` and `--to` do not need to exist on disk, which makes the command useful for manual repair after a failed move
@@ -36,6 +36,6 @@ Output:
 Examples:
 
 ```bash
-bun {skillPath}/scripts/index.ts rename-references --from team/open_a_202604011000 --to archive/team/closed_a_202604011000
-bun {skillPath}/scripts/index.ts rename-references --from team/open_a_202604011000.md --to archive/team/closed_a_202604011000.md --dry-run
+bun {skillPath}/scripts/index.ts rename-references --from team/20260401_open_a --to archive/team/20260401_closed_a
+bun {skillPath}/scripts/index.ts rename-references --from team/20260401_open_a.md --to archive/team/20260401_closed_a.md --dry-run
 ```

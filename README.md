@@ -92,7 +92,7 @@ bun {skillPath}/scripts/index.ts touch --id <uuid>
 
 ### Filename Slugs
 
-- filenames are generated from `status + title slug + created_at`
+- filenames are generated as `{YYYYMMDD}_{status}_{title-slug}.md` from `created_at`, status, and title
 - the slug keeps Unicode letters and numbers where possible, including CJK characters
 - filenames remain human-readable only; `id` is still the stable issue identifier
 

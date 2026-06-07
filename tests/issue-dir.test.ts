@@ -83,7 +83,7 @@ test("commands use a custom issue directory when --issue-dir is provided", async
   const modifiedDocument = documents.find(
     (document) => document.frontMatter.id === createPayload.data.issue.id,
   );
-  expect(modifiedDocument?.name).toStartWith("closed_custom-dir-issue_");
+  expect(modifiedDocument?.name).toContain("_closed_custom-dir-issue.md");
   expect(modifiedDocument?.frontMatter.labels).toEqual(["CUSTOMIZED"]);
 });
 
@@ -132,7 +132,7 @@ test("recursive scan finds nested issue files and modify preserves the subdir", 
   const documents = await readIssueDocuments(workspace, issueDir);
   expect(documents).toHaveLength(1);
   expect(documents[0].relativePath).toBe(
-    "team/backend/closed_nested-issue_202604011600.md",
+    "team/backend/20260401_closed_nested-issue.md",
   );
 });
 
@@ -162,8 +162,9 @@ test("new stores issues in a nested subdir when --subdir is provided", async () 
   const documents = await readIssueDocuments(workspace, issueDir);
   expect(documents).toHaveLength(1);
   expect(documents[0].relativePath).toStartWith(
-    "triage/frontend/open_nested-new-issue_",
+    "triage/frontend/202",
   );
+  expect(documents[0].relativePath).toContain("_open_nested-new-issue.md");
 });
 
 test("touch finds nested issue files in a custom issue directory", async () => {
@@ -198,7 +199,7 @@ test("touch finds nested issue files in a custom issue directory", async () => {
   const documents = await readIssueDocuments(workspace, issueDir);
   expect(documents).toHaveLength(1);
   expect(documents[0].relativePath).toBe(
-    "team/backend/working_nested-touch-issue_202603280900.md",
+    "team/backend/20260328_working_nested-touch-issue.md",
   );
   expect(documents[0].frontMatter.updated_at).not.toBe("2026-03-28T09:00:00Z");
   expect(documents[0].body).toBe("Keep nested body.\n");
@@ -258,14 +259,14 @@ test("archive preserves nested subdirs in a custom issue directory", async () =>
 
   expect(showPayload.data.issue.status).toBe("closed");
   expect(showPayload.data.issue.relativePath).toBe(
-    "archive/team/backend/closed_nested-archive-issue_202603280900.md",
+    "archive/team/backend/20260328_closed_nested-archive-issue.md",
   );
   expect(showPayload.data.issue.archived).toBe(true);
 
   const documents = await readIssueDocuments(workspace, issueDir);
   expect(documents).toHaveLength(1);
   expect(documents[0].relativePath).toBe(
-    "archive/team/backend/closed_nested-archive-issue_202603280900.md",
+    "archive/team/backend/20260328_closed_nested-archive-issue.md",
   );
   expect(documents[0].body).toBe("Archive nested body.\n");
 });

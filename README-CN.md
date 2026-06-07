@@ -78,7 +78,7 @@ updated_at: "2026-04-01T14:30:00Z"
 
 ### 文件名 slug
 
-- 文件名由 `status + title slug + created_at` 组成
+- 文件名由 `created_at` 日期、`status` 和 `title slug` 组成，格式为 `{YYYYMMDD}_{status}_{title-slug}.md`
 - slug 会尽量保留 Unicode 字母和数字，包括 CJK 字符
 - 文件名只用于提升可读性，稳定标识仍然是 `id`
 

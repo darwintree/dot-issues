@@ -134,14 +134,14 @@ bun scripts/index.ts new --title "Fix login bug" --status open --priority high -
 
 **Optional Args:** `priority`, `labels` (repeatable)
 
-**Side Effects:** Creates `.issues/[status]_[title-slug]_[YYYYMMDDHHmm].md` file
+**Side Effects:** Creates `.issues/[YYYYMMDD]_[status]_[title-slug].md` file
 
 **Implementation:**
 
 1. Validate: title (non-empty), status (one of: open/working/closed)
 2. Generate: UUID via `crypto.randomUUID()`
 3. Generate: title-slug (lowercase, spaces→hyphens, remove special chars)
-4. Generate: YYYYMMDDHHmm timestamp from current time
+4. Generate: YYYYMMDD date from current time
 5. Generate: front matter (YAML with metadata)
 6. Write: Markdown file with front matter + empty body
 7. Output: JSON result (success/error)
@@ -287,7 +287,7 @@ interface ParsedArgs {
    - Create issue with required args
    - Verify file created with correct format
    - Verify UUID generation
-   - Verify filename includes status, slug, timestamp
+   - Verify filename includes date, status, and slug
 
 2. **list command tests**
    - List empty directory

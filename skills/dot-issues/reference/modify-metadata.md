@@ -19,6 +19,7 @@ Notes:
 
 - Changes metadata and preserves the issue body
 - If `title` or `status` changes the generated filename, the file is renamed to match
+- Generated filenames use `{YYYYMMDD}_{status}_{title-slug}.md` and keep the original `created_at` date
 - When the file is renamed, Markdown and Obsidian links to the old issue path are updated across the current issue base dir, including archived issues
 - Links inside the renamed issue that point to other known issue files are rebased relative to the issue's new location
 - Markdown inline link titles are preserved while paths are rewritten

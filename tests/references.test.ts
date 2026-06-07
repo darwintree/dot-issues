@@ -46,11 +46,11 @@ test("modify-metadata status rename updates Markdown links and skips excluded ta
     workspace,
     referrer,
     [
-      "[target](open_target-issue_202604011000.md?plain=1#notes)",
-      '[target title](open_target-issue_202604011000.md "Target issue")',
-      "[target single title](open_target-issue_202604011000.md 'Target issue')",
-      "[target paren title](open_target-issue_202604011000.md (Target issue))",
-      "[target angle title](<open_target-issue_202604011000.md> \"Target issue\")",
+      "[target](20260401_open_target-issue.md?plain=1#notes)",
+      '[target title](20260401_open_target-issue.md "Target issue")',
+      "[target single title](20260401_open_target-issue.md 'Target issue')",
+      "[target paren title](20260401_open_target-issue.md (Target issue))",
+      "[target angle title](<20260401_open_target-issue.md> \"Target issue\")",
       "[web](https://example.com/open_target-issue_202604011000.md)",
       "[anchor](#open_target-issue_202604011000)",
       "[root](/open_target-issue_202604011000.md)",
@@ -84,11 +84,11 @@ test("modify-metadata status rename updates Markdown links and skips excluded ta
   expect(referrerDocument?.frontMatter.updated_at).toBe(referrer.updated_at);
   expect(referrerDocument?.body).toBe(
     [
-      "[target](closed_target-issue_202604011000.md?plain=1#notes)",
-      '[target title](closed_target-issue_202604011000.md "Target issue")',
-      "[target single title](closed_target-issue_202604011000.md 'Target issue')",
-      "[target paren title](closed_target-issue_202604011000.md (Target issue))",
-      "[target angle title](<closed_target-issue_202604011000.md> \"Target issue\")",
+      "[target](20260401_closed_target-issue.md?plain=1#notes)",
+      '[target title](20260401_closed_target-issue.md "Target issue")',
+      "[target single title](20260401_closed_target-issue.md 'Target issue')",
+      "[target paren title](20260401_closed_target-issue.md (Target issue))",
+      "[target angle title](<20260401_closed_target-issue.md> \"Target issue\")",
       "[web](https://example.com/open_target-issue_202604011000.md)",
       "[anchor](#open_target-issue_202604011000)",
       "[root](/open_target-issue_202604011000.md)",
@@ -123,9 +123,9 @@ test("modify-metadata title rename updates Obsidian links while preserving alias
     workspace,
     referrer,
     [
-      "[[../team/open_old-title_202604011000#Notes|Old title]]",
-      "[[../team/open_old-title_202604011000#^block-id]]",
-      "[[open_old-title_202604011000]]",
+      "[[../team/20260401_open_old-title#Notes|Old title]]",
+      "[[../team/20260401_open_old-title#^block-id]]",
+      "[[20260401_open_old-title]]",
       "",
     ].join("\n"),
     ".issues/notes",
@@ -154,9 +154,9 @@ test("modify-metadata title rename updates Obsidian links while preserving alias
   );
   expect(referrerDocument?.body).toBe(
     [
-      "[[../team/open_new-title_202604011000#Notes|Old title]]",
-      "[[../team/open_new-title_202604011000#^block-id]]",
-      "[[../team/open_new-title_202604011000]]",
+      "[[../team/20260401_open_new-title#Notes|Old title]]",
+      "[[../team/20260401_open_new-title#^block-id]]",
+      "[[../team/20260401_open_new-title]]",
       "",
     ].join("\n"),
   );
@@ -185,10 +185,10 @@ test("archive updates nested relative links and moved-file self references", asy
     workspace,
     target,
     [
-      "[self](working_nested-archive_202604011000.md)",
-      "[[working_nested-archive_202604011000|self]]",
-      "[frontend](../frontend/open_frontend-referrer_202604011100.md?view=1#notes)",
-      "[[../frontend/open_frontend-referrer_202604011100#Notes|Frontend]]",
+      "[self](20260401_working_nested-archive.md)",
+      "[[20260401_working_nested-archive|self]]",
+      "[frontend](../frontend/20260401_open_frontend-referrer.md?view=1#notes)",
+      "[[../frontend/20260401_open_frontend-referrer#Notes|Frontend]]",
       "",
     ].join("\n"),
     ".issues/team/backend",
@@ -196,7 +196,7 @@ test("archive updates nested relative links and moved-file self references", asy
   await seedIssue(
     workspace,
     referrer,
-    "[target](../backend/working_nested-archive_202604011000.md)\n",
+    "[target](../backend/20260401_working_nested-archive.md)\n",
     ".issues/team/frontend",
   );
 
@@ -220,19 +220,19 @@ test("archive updates nested relative links and moved-file self references", asy
   );
 
   expect(targetDocument?.relativePath).toBe(
-    "archive/team/backend/closed_nested-archive_202604011000.md",
+    "archive/team/backend/20260401_closed_nested-archive.md",
   );
   expect(targetDocument?.body).toBe(
     [
-      "[self](closed_nested-archive_202604011000.md)",
-      "[[closed_nested-archive_202604011000|self]]",
-      "[frontend](../../../team/frontend/open_frontend-referrer_202604011100.md?view=1#notes)",
-      "[[../../../team/frontend/open_frontend-referrer_202604011100#Notes|Frontend]]",
+      "[self](20260401_closed_nested-archive.md)",
+      "[[20260401_closed_nested-archive|self]]",
+      "[frontend](../../../team/frontend/20260401_open_frontend-referrer.md?view=1#notes)",
+      "[[../../../team/frontend/20260401_open_frontend-referrer#Notes|Frontend]]",
       "",
     ].join("\n"),
   );
   expect(referrerDocument?.body).toBe(
-    "[target](../../archive/team/backend/closed_nested-archive_202604011000.md)\n",
+    "[target](../../archive/team/backend/20260401_closed_nested-archive.md)\n",
   );
 });
 

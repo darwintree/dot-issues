@@ -49,7 +49,8 @@ test("new command creates an issue file with generated metadata", async () => {
 
   const documents = await readIssueDocuments(workspace);
   expect(documents).toHaveLength(1);
-  expect(documents[0].name).toStartWith("open_fix-login-bug_");
+  expect(documents[0].name).toStartWith("202");
+  expect(documents[0].name).toContain("_open_fix-login-bug.md");
   expect(documents[0].frontMatter.title).toBe("Fix login bug");
   expect(documents[0].frontMatter.status).toBe("open");
   expect(documents[0].frontMatter.priority).toBe("high");
@@ -154,7 +155,10 @@ test("new command preserves CJK characters in the generated filename", async () 
   const documents = await readIssueDocuments(workspace);
   expect(documents).toHaveLength(1);
   expect(documents[0].name).toStartWith(
-    "open_收敛测试运行环境依赖并修复时间抖动导致的不稳定_",
+    "202",
+  );
+  expect(documents[0].name).toContain(
+    "_open_收敛测试运行环境依赖并修复时间抖动导致的不稳定.md",
   );
 });
 
@@ -266,7 +270,7 @@ test("modify-metadata renames the file using a CJK title slug", async () => {
 
   const documents = await readIssueDocuments(workspace);
   expect(documents).toHaveLength(1);
-  expect(documents[0].name).toBe("open_修复中文文件名降级问题_202604011430.md");
+  expect(documents[0].name).toBe("20260401_open_修复中文文件名降级问题.md");
   expect(documents[0].frontMatter.title).toBe("修复中文文件名降级问题");
 });
 
@@ -412,8 +416,8 @@ test("show command returns issue metadata, body, path, and archived state", asyn
   expect(payload.success).toBe(true);
   expect(payload.data.issue.title).toBe(issue.title);
   expect(payload.data.issue.body).toBe("Issue body.\n");
-  expect(payload.data.issue.relativePath).toBe("open_show-me_202604011000.md");
-  expect(payload.data.issue.path).toContain("/.issues/open_show-me_202604011000.md");
+  expect(payload.data.issue.relativePath).toBe("20260401_open_show-me.md");
+  expect(payload.data.issue.path).toContain("/.issues/20260401_open_show-me.md");
   expect(payload.data.issue.archived).toBe(false);
 });
 
@@ -451,7 +455,7 @@ test("search command matches title and body, case-insensitively", async () => {
   expect(result.exitCode).toBe(0);
   expect(result.stderr).toBe("");
   expect(result.stdout).toBe(
-    "[working] Login investigation (high) #AUTH (2026-04-02) :: working_login-investigation_202604021000.md\n[open] Dashboard copy #UI (2026-04-01) :: open_dashboard-copy_202604011000.md",
+    "[working] Login investigation (high) #AUTH (2026-04-02) :: 20260402_working_login-investigation.md\n[open] Dashboard copy #UI (2026-04-01) :: 20260401_open_dashboard-copy.md",
   );
 });
 
@@ -494,7 +498,7 @@ test("modify-metadata updates front matter, preserves body, and renames the file
 
   const documents = await readIssueDocuments(workspace);
   expect(documents).toHaveLength(1);
-  expect(documents[0].name).toBe("closed_fix-login-bug-now_202604011430.md");
+  expect(documents[0].name).toBe("20260401_closed_fix-login-bug-now.md");
   expect(documents[0].frontMatter.title).toBe("Fix login bug now");
   expect(documents[0].frontMatter.status).toBe("closed");
   expect(documents[0].frontMatter.priority).toBe("low");
@@ -624,7 +628,7 @@ test("touch updates only updated_at and preserves body and file path", async () 
 
   const documents = await readIssueDocuments(workspace);
   expect(documents).toHaveLength(1);
-  expect(documents[0].name).toBe("open_touch-me_202603280900.md");
+  expect(documents[0].name).toBe("20260328_open_touch-me.md");
   expect(documents[0].frontMatter.created_at).toBe(issue.created_at);
   expect(documents[0].frontMatter.updated_at).not.toBe(issue.updated_at);
   expect(documents[0].frontMatter.title).toBe(issue.title);
@@ -659,7 +663,7 @@ test("archive moves an issue under archive, closes it, and show still finds it",
 
   expect(archivePayload.success).toBe(true);
   expect(archivePayload.data.issue.status).toBe("closed");
-  expect(archivePayload.data.path).toContain("/.issues/archive/closed_archive-me_202603280900.md");
+  expect(archivePayload.data.path).toContain("/.issues/archive/20260328_closed_archive-me.md");
 
   const listResult = await runCli(workspace, ["list"]);
   expect(listResult.exitCode).toBe(0);
@@ -685,13 +689,13 @@ test("archive moves an issue under archive, closes it, and show still finds it",
   expect(showPayload.data.issue.status).toBe("closed");
   expect(showPayload.data.issue.body).toBe("Preserve this body.\n");
   expect(showPayload.data.issue.relativePath).toBe(
-    "archive/closed_archive-me_202603280900.md",
+    "archive/20260328_closed_archive-me.md",
   );
   expect(showPayload.data.issue.archived).toBe(true);
 
   const documents = await readIssueDocuments(workspace);
   expect(documents).toHaveLength(1);
-  expect(documents[0].relativePath).toBe("archive/closed_archive-me_202603280900.md");
+  expect(documents[0].relativePath).toBe("archive/20260328_closed_archive-me.md");
   expect(documents[0].frontMatter.status).toBe("closed");
   expect(documents[0].body).toBe("Preserve this body.\n");
 });

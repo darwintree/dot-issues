@@ -82,7 +82,7 @@ export function generateFileName(
   title: string,
   createdAt: Date,
 ): string {
-  return `${status}_${titleToSlug(title)}_${formatFileTimestamp(createdAt)}.md`;
+  return `${formatFileDate(createdAt)}_${status}_${titleToSlug(title)}.md`;
 }
 
 export function titleToSlug(title: string): string {
@@ -131,11 +131,9 @@ function serializeFrontMatterValue(value: FrontMatterValue): string {
     : JSON.stringify(value);
 }
 
-function formatFileTimestamp(date: Date): string {
+function formatFileDate(date: Date): string {
   const year = date.getUTCFullYear().toString().padStart(4, "0");
   const month = (date.getUTCMonth() + 1).toString().padStart(2, "0");
   const day = date.getUTCDate().toString().padStart(2, "0");
-  const hours = date.getUTCHours().toString().padStart(2, "0");
-  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-  return `${year}${month}${day}${hours}${minutes}`;
+  return `${year}${month}${day}`;
 }

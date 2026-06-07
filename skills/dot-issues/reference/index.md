@@ -9,6 +9,7 @@ Conventions:
 - The default issue base dir is `.issues`
 - Use `--issue-dir <dir>` to override the default base dir
 - `id` is the stable issue identifier; filenames are only for readability
+- Generated issue filenames use `{YYYYMMDD}_{status}_{title-slug}.md`
 
 ## Commands
 

@@ -20,6 +20,7 @@ Notes:
 
 - By default, the command creates a body with the standard template
 - `--content` sets the initial body exactly as provided
+- The generated filename uses `{YYYYMMDD}_{status}_{title-slug}.md`
 - `--subdir` creates the issue under a nested directory inside `--issue-dir`
 - All labels are normalized to uppercase before storage
 - By default, every label must already exist in `{issueBaseDir}/labels.json`
