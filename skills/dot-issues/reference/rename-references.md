@@ -20,6 +20,7 @@ Notes:
 - The command scans only Markdown issue files inside the current issue base dir, including `archive/`
 - Only Markdown bodies are updated; front matter is not scanned or rewritten
 - Standard Markdown inline links and Obsidian wikilinks are supported
+- Bare Obsidian wikilinks such as `[[open_example_202604011000|Example]]` are treated as references to `--from` when their filename basename matches the source path
 - Markdown inline link titles are preserved while the path portion is rewritten
 - External URLs, anchors, absolute paths, non-Markdown links, and reference-style links are not rewritten
 - `--from` and `--to` do not need to exist on disk, which makes the command useful for manual repair after a failed move

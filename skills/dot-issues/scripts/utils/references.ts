@@ -235,10 +235,10 @@ function rewriteReferencesInBody(
         return match;
       }
 
-      const resolvedPath = resolveLinkedIssuePath(
-        target.path,
-        options.matchContextRelativePath,
-      );
+      const resolvedPath =
+        target.isBarePath && target.path === posix.basename(options.fromRelativePath)
+          ? options.fromRelativePath
+          : resolveLinkedIssuePath(target.path, options.matchContextRelativePath);
       const targetPath = getReplacementTargetPath(resolvedPath, options);
       if (!targetPath) {
         return match;
@@ -577,6 +577,7 @@ function parseObsidianTarget(rawTarget: string, options: RewriteBodyOptions):
       fragment: string;
       alias: string;
       keepMarkdownExtension: boolean;
+      isBarePath: boolean;
     }
   | null {
   const aliasIndex = rawTarget.indexOf("|");
@@ -600,19 +601,12 @@ function parseObsidianTarget(rawTarget: string, options: RewriteBodyOptions):
     return null;
   }
 
-  if (
-    !rawPath.includes("/") &&
-    (options.matchContextRelativePath !== options.fromRelativePath ||
-      normalizedPath.path !== posix.basename(options.fromRelativePath))
-  ) {
-    return null;
-  }
-
   return {
     path: normalizedPath.path,
     fragment,
     alias,
     keepMarkdownExtension: normalizedPath.keepMarkdownExtension,
+    isBarePath: !rawPath.includes("/"),
   };
 }
 

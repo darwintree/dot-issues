@@ -145,7 +145,7 @@ test("modify-metadata title rename updates Obsidian links while preserving alias
   }>(result.stdout);
   expect(payload.data.references).toEqual({
     filesChanged: 1,
-    referencesChanged: 2,
+    referencesChanged: 3,
   });
 
   const documents = await readIssueDocuments(workspace);
@@ -156,7 +156,7 @@ test("modify-metadata title rename updates Obsidian links while preserving alias
     [
       "[[../team/open_new-title_202604011000#Notes|Old title]]",
       "[[../team/open_new-title_202604011000#^block-id]]",
-      "[[open_old-title_202604011000]]",
+      "[[../team/open_new-title_202604011000]]",
       "",
     ].join("\n"),
   );
@@ -281,6 +281,42 @@ test("rename-references supports dry-run, missing source paths, and URL-encoded 
   expect(applied.exitCode).toBe(0);
   expect(await readFile(filePath, "utf8")).toContain(
     "[missing](archive/missing/new%20name.md#notes)",
+  );
+});
+
+test("rename-references updates bare Obsidian links by source basename", async () => {
+  const workspace = await makeWorkspace();
+  const referrer: Issue = {
+    id: "550e8400-e29b-41d4-a716-446655441009",
+    title: "Archived daily todo",
+    status: "closed",
+    labels: [],
+    created_at: "2026-04-01T11:00:00Z",
+    updated_at: "2026-04-01T11:00:00Z",
+  };
+  const filePath = await seedIssue(
+    workspace,
+    referrer,
+    "[[open_old-name_202604011000|Old name]]\n",
+    ".issues/archive",
+  );
+
+  const result = await runCli(workspace, [
+    "rename-references",
+    "--from",
+    "open_old-name_202604011000",
+    "--to",
+    "open_new-name_202604011000",
+  ]);
+
+  expect(result.exitCode).toBe(0);
+  const payload = parseJsonOutput<{
+    data: { filesChanged: number; referencesChanged: number };
+  }>(result.stdout);
+  expect(payload.data.filesChanged).toBe(1);
+  expect(payload.data.referencesChanged).toBe(1);
+  expect(await readFile(filePath, "utf8")).toContain(
+    "[[../open_new-name_202604011000|Old name]]",
   );
 });
 
