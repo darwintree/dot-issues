@@ -5,6 +5,10 @@ import { generateMarkdownContent, parseFrontMatter } from "./markdown";
 
 export const ARCHIVE_DIRNAME = "archive";
 
+export function isEnoentError(error: unknown): error is NodeJS.ErrnoException {
+  return (error as NodeJS.ErrnoException).code === "ENOENT";
+}
+
 export async function readMarkdownFile(filePath: string): Promise<{
   frontMatter: FrontMatterData;
   body: string;
@@ -28,7 +32,7 @@ export async function listIssueFiles(
   try {
     return (await collectIssueFiles(dirPath, options?.includeArchived ?? true)).sort();
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+    if (isEnoentError(error)) {
       return [];
     }
 
@@ -73,7 +77,16 @@ async function collectIssueFiles(
   includeArchived: boolean,
   isRoot = true,
 ): Promise<string[]> {
-  const entries = await readdir(dirPath, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await readdir(dirPath, { withFileTypes: true });
+  } catch (error) {
+    if (isEnoentError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
   const filePaths = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
     .map((entry) => join(dirPath, entry.name));

@@ -1,6 +1,11 @@
 import { dirname, relative } from "node:path";
 import type { FrontMatterData, Issue } from "../types";
-import { ARCHIVE_DIRNAME, listIssueFiles, readMarkdownFile } from "./file";
+import {
+  ARCHIVE_DIRNAME,
+  isEnoentError,
+  listIssueFiles,
+  readMarkdownFile,
+} from "./file";
 import { toIssue } from "./validate";
 
 export interface LocatedIssue {
@@ -24,21 +29,31 @@ export async function listLocatedIssues(
     includeArchived: options?.includeArchived ?? true,
   });
 
-  return Promise.all(
+  const results = await Promise.all(
     filePaths.map(async (filePath) => {
-      const { frontMatter, body } = await readMarkdownFile(filePath);
-      const issue = toIssue(frontMatter);
-      const relativePath = relative(issueDir, filePath);
-      return {
-        filePath,
-        relativePath,
-        archived: isArchivedRelativePath(relativePath),
-        frontMatter,
-        issue,
-        body,
-      };
+      try {
+        const { frontMatter, body } = await readMarkdownFile(filePath);
+        const issue = toIssue(frontMatter);
+        const relativePath = relative(issueDir, filePath);
+        return {
+          filePath,
+          relativePath,
+          archived: isArchivedRelativePath(relativePath),
+          frontMatter,
+          issue,
+          body,
+        };
+      } catch (error) {
+        if (isEnoentError(error)) {
+          return null;
+        }
+
+        throw error;
+      }
     }),
   );
+
+  return results.filter((result): result is LocatedIssue => result !== null);
 }
 
 export async function findIssueById(
